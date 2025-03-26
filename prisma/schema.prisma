@@ -45,6 +45,7 @@ model User {
     role          Role       @default(CANDIDATE)
     candidate     Candidate? // For candidate users
     hrProfile     HRProfile? // For HR users
+    createdAssessments Assessment[] @relation("CreatedAssessments") // Assessments created by HR
 }
 
 model VerificationToken {
@@ -94,6 +95,14 @@ model Assessment {
     createdAt   DateTime         @default(now())
     updatedAt   DateTime         @updatedAt
     questions   Question[]
+    createdBy   String          // HR user ID who created the assessment
+    hrUser      User            @relation("CreatedAssessments", fields: [createdBy], references: [id])
+    uniqueLink  String          @unique // Unique link for assessment access
+    isTemplate  Boolean         @default(false) // Whether this is a template assessment
+    templateName String?        // Name of the template if isTemplate is true
+    maxDuration Int?            // Maximum duration in minutes for the assessment
+    passingScore Float?         // Minimum score required to pass
+    aiAnalysisEnabled Boolean   @default(true) // Whether AI analysis is enabled for this assessment
 }
 
 enum AssessmentStatus {
