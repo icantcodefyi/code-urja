@@ -19,10 +19,14 @@ export async function POST(req: Request) {
       where: { id: assessmentId },
       include: {
         hrUser: true,
-        candidate: {
+        submissions: {
           include: {
-            user: true,
-            analysis: true,
+            candidate: {
+              include: {
+                user: true,
+                analysis: true,
+              }
+            }
           }
         }
       }
@@ -42,9 +46,21 @@ export async function POST(req: Request) {
       );
     }
     
+    // Get the completed submission (assuming we want to email about a completed assessment)
+    const completedSubmission = assessment.submissions.find(
+      submission => submission.status === "COMPLETED" || submission.status === "REVIEWED"
+    );
+    
+    if (!completedSubmission) {
+      return NextResponse.json(
+        { error: "No completed assessment submission found" },
+        { status: 404 }
+      );
+    }
+    
     // Get the candidate details
-    const candidateName = assessment.candidate?.user?.name ?? "Candidate";
-    const candidateAnalysis = assessment.candidate?.analysis;
+    const candidateName = completedSubmission.candidate?.user?.name ?? "Candidate";
+    const candidateAnalysis = completedSubmission.candidate?.analysis;
     
     if (!candidateAnalysis) {
       return NextResponse.json(
@@ -54,7 +70,7 @@ export async function POST(req: Request) {
     }
     
     // Extract strengths from analysis
-    const strengths = candidateAnalysis.strengths || [];
+    const strengths = candidateAnalysis.strengths ?? [];
     
     // Generate dashboard link
     const dashboardLink = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/assessments/${assessmentId}`;
