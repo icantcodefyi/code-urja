@@ -1,5 +1,5 @@
 import type * as React from "react"
-import { Briefcase, Users, FileText, BarChart2, Settings, User, Video, AudioLines } from "lucide-react"
+import { Briefcase, Users, FileText, BarChart2, Settings, User, Video } from "lucide-react"
 
 import {
   Sidebar,

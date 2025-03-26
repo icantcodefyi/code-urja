@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -10,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { Label } from "~/components/ui/label";
 import { Progress } from "~/components/ui/progress";
 import Badge from "~/components/ui/badge";
-import { VideoIcon, MicIcon, FileIcon, Upload, Clock, MessageSquare, BarChart2 } from "lucide-react";
+import { VideoIcon, MicIcon, Upload, Clock, MessageSquare } from "lucide-react";
 import type { CreateAssessmentInput } from '~/server/types';
 import { QuestionType } from '~/server/types';
 
@@ -130,182 +129,113 @@ export default function AssessmentGenerator() {
       </div>
 
       {currentStep === 0 && (
-        <Tabs defaultValue="create" className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-            <TabsTrigger value="create">Create Assessment</TabsTrigger>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="create">
-            <div className="grid md:grid-cols-2 gap-8">
-              <Card className="">
-                <CardHeader>
-                  <CardTitle>Assessment Configuration</CardTitle>
-                  <CardDescription>
-                    Configure your assessment parameters to match your hiring needs
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form id="assessmentForm" onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="jobTitle">Job Title</Label>
-                      <Input
-                        id="jobTitle"
-                        name="jobTitle"
-                        required
-                        placeholder="e.g., Senior Software Engineer"
-                      />
-                    </div>
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Assessment Configuration</CardTitle>
+            <CardDescription>
+              Configure your assessment parameters to match your hiring needs
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form id="assessmentForm" onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="jobTitle">Job Title</Label>
+                <Input
+                  id="jobTitle"
+                  name="jobTitle"
+                  required
+                  placeholder="e.g., Senior Software Engineer"
+                />
+              </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="experienceLevel">Experience Level</Label>
-                      <Select name="experienceLevel" defaultValue="Mid">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select experience level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Junior">Junior</SelectItem>
-                          <SelectItem value="Mid">Mid-Level</SelectItem>
-                          <SelectItem value="Senior">Senior</SelectItem>
-                          <SelectItem value="Lead">Lead</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+              <div className="space-y-2">
+                <Label htmlFor="experienceLevel">Experience Level</Label>
+                <Select name="experienceLevel" defaultValue="Mid">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select experience level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Junior">Junior</SelectItem>
+                    <SelectItem value="Mid">Mid-Level</SelectItem>
+                    <SelectItem value="Senior">Senior</SelectItem>
+                    <SelectItem value="Lead">Lead</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="requiredSkills">Required Skills</Label>
-                      <Input
-                        id="requiredSkills"
-                        name="requiredSkills"
-                        required
-                        placeholder="e.g., TypeScript, React, Node.js"
-                      />
-                      <p className="text-xs text-muted-foreground">Comma-separated list of skills</p>
-                    </div>
+              <div className="space-y-2">
+                <Label htmlFor="requiredSkills">Required Skills</Label>
+                <Input
+                  id="requiredSkills"
+                  name="requiredSkills"
+                  required
+                  placeholder="e.g., TypeScript, React, Node.js"
+                />
+                <p className="text-xs text-muted-foreground">Comma-separated list of skills</p>
+              </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="companyContext">Company Context</Label>
-                      <Textarea
-                        id="companyContext"
-                        name="companyContext"
-                        placeholder="Brief description of your company and culture"
-                        className="min-h-[80px]"
-                      />
-                    </div>
+              <div className="space-y-2">
+                <Label htmlFor="companyContext">Company Context</Label>
+                <Textarea
+                  id="companyContext"
+                  name="companyContext"
+                  placeholder="Brief description of your company and culture"
+                  className="min-h-[80px]"
+                />
+              </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="assessmentType">Assessment Type</Label>
-                      <Select name="assessmentType" defaultValue="MIXED">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select assessment type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="TECHNICAL">Technical</SelectItem>
-                          <SelectItem value="BEHAVIORAL">Behavioral</SelectItem>
-                          <SelectItem value="MIXED">Mixed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+              <div className="space-y-2">
+                <Label htmlFor="assessmentType">Assessment Type</Label>
+                <Select name="assessmentType" defaultValue="MIXED">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select assessment type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TECHNICAL">Technical</SelectItem>
+                    <SelectItem value="BEHAVIORAL">Behavioral</SelectItem>
+                    <SelectItem value="MIXED">Mixed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="numberOfQuestions">Number of Questions</Label>
-                        <Input
-                          id="numberOfQuestions"
-                          name="numberOfQuestions"
-                          type="number"
-                          min="1"
-                          max="20"
-                          defaultValue="5"
-                        />
-                      </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="numberOfQuestions">Number of Questions</Label>
+                  <Input
+                    id="numberOfQuestions"
+                    name="numberOfQuestions"
+                    type="number"
+                    min="1"
+                    max="20"
+                    defaultValue="5"
+                  />
+                </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="preferredDuration">Duration (minutes)</Label>
-                        <Input
-                          id="preferredDuration"
-                          name="preferredDuration"
-                          type="number"
-                          min="15"
-                          max="180"
-                          defaultValue="60"
-                        />
-                      </div>
-                    </div>
-                  </form>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    type="submit" 
-                    form="assessmentForm"
-                    disabled={loading} 
-                    className="w-full"
-                  >
-                    {loading ? 'Generating...' : 'Generate Assessment'}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="templates">
-            <div className="grid md:grid-cols-3 gap-4">
-              <Card className="cursor-pointer hover:border-primary transition-colors">
-                <CardHeader>
-                  <CardTitle>Frontend Developer</CardTitle>
-                  <CardDescription>30 min assessment</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    <Badge variant="secondary">React</Badge>
-                    <Badge variant="secondary">TypeScript</Badge>
-                    <Badge variant="secondary">CSS</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">8 questions including technical and behavioral components</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">Use Template</Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="cursor-pointer hover:border-primary transition-colors">
-                <CardHeader>
-                  <CardTitle>Backend Engineer</CardTitle>
-                  <CardDescription>45 min assessment</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    <Badge variant="secondary">Node.js</Badge>
-                    <Badge variant="secondary">Python</Badge>
-                    <Badge variant="secondary">SQL</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">10 questions focused on system design and algorithms</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">Use Template</Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="cursor-pointer hover:border-primary transition-colors">
-                <CardHeader>
-                  <CardTitle>Product Manager</CardTitle>
-                  <CardDescription>60 min assessment</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    <Badge variant="secondary">Strategy</Badge>
-                    <Badge variant="secondary">UX</Badge>
-                    <Badge variant="secondary">Analytics</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">12 questions covering product strategy and leadership</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">Use Template</Button>
-                </CardFooter>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+                <div className="space-y-2">
+                  <Label htmlFor="preferredDuration">Duration (minutes)</Label>
+                  <Input
+                    id="preferredDuration"
+                    name="preferredDuration"
+                    type="number"
+                    min="15"
+                    max="180"
+                    defaultValue="60"
+                  />
+                </div>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter>
+            <Button 
+              type="submit" 
+              form="assessmentForm"
+              disabled={loading} 
+              className="w-full"
+            >
+              {loading ? 'Generating...' : 'Generate Assessment'}
+            </Button>
+          </CardFooter>
+        </Card>
       )}
 
       {currentStep === 1 && (
@@ -433,7 +363,7 @@ export default function AssessmentGenerator() {
                   <ul className="text-sm text-muted-foreground mt-1 space-y-1 list-disc list-inside">
                     <li>Briefly introduce yourself and your current role</li>
                     <li>Highlight your most relevant experience for this position</li>
-                    <li>Explain why you're interested in this opportunity</li>
+                    <li>Explain why you&apos;re interested in this opportunity</li>
                     <li>Share what makes you a unique candidate</li>
                   </ul>
                 </div>
@@ -468,7 +398,7 @@ export default function AssessmentGenerator() {
                   <div key={index} className="border rounded-lg p-4">
                     <div className="flex justify-between mb-3">
                       <div className="font-medium">Question {index + 1}</div>
-                      <Badge variant="outline">{question.type}</Badge>
+                      <Badge>{question.type}</Badge>
                     </div>
                     <p className="mb-4">{question.text}</p>
                     
