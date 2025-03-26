@@ -6,7 +6,6 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import Badge from "~/components/ui/badge";
 import { 
   Video, AudioLines, Search, Filter, PlayCircle, PauseCircle,
   Download, Share2, MessageCircle, User, ThumbsUp, ThumbsDown, Clipboard
@@ -95,11 +94,13 @@ const mediaData = {
   ]
 };
 
+type PlayingState = Record<string, boolean>;
+
 export default function MediaResponses() {
   const [tabValue, setTabValue] = useState("video");
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
-  const [isPlaying, setIsPlaying] = useState<{[key: string]: boolean}>({});
+  const [isPlaying, setIsPlaying] = useState<PlayingState>({});
   
   // Filter and sort media data
   const filteredData = (tabValue === 'video' ? mediaData.video : mediaData.audio).filter(item => {
@@ -122,9 +123,13 @@ export default function MediaResponses() {
     }));
   };
   
-  const copyTranscription = (transcription: string) => {
-    navigator.clipboard.writeText(transcription);
-    // Would normally add a toast notification here
+  const copyTranscription = async (transcription: string) => {
+    try {
+      await navigator.clipboard.writeText(transcription);
+      // Would normally add a toast notification here
+    } catch (error) {
+      console.error('Failed to copy text: ', error);
+    }
   };
 
   return (
