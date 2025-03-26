@@ -173,7 +173,7 @@ const GetStartedButton = () => {
       style={{ boxShadow: "0px 4px 14.8px rgba(0, 0, 0, 0.2)" }}
       className="flex items-center justify-center w-full md:w-36 h-10 rounded-xl border border-emerald-700 bg-gradient-to-b from-emerald-500 to-brand text-base font-semibold text-white"
     >
-      Get started
+      Hire Now!
       <ArrowRight className="h-4 w-4 ml-2" />
     </Link>
   );
