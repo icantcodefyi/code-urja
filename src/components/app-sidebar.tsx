@@ -68,7 +68,7 @@ const data = {
     },
     {
       title: "Jobs",
-      url: "/app/jobs",
+      url: "#",
       icon: <Briefcase className="size-4" />,
     },
     {

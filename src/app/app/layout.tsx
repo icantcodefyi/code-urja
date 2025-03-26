@@ -59,7 +59,7 @@ export default function AppLayout({
             <SidebarTrigger className="rotate-180" />
           </div>
         </header>
-        <main className="flex-1 overflow-auto mx-auto min-w-4xl">
+        <main className="flex-1 overflow-auto mx-auto max-w-4xl min-w-4xl">
           {children}
         </main>
       </SidebarInset>

@@ -149,7 +149,7 @@ export default function MediaResponses() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="px-4 py-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Media Responses</h1>
         <p className="text-muted-foreground">Review candidate video and audio responses with transcriptions</p>
