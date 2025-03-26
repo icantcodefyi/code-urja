@@ -12,6 +12,7 @@ import {
   Save, Building, Mail, BellRing, User, Trash2, 
   Shield, Globe, AlertTriangle
 } from "lucide-react";
+import { Skeleton } from "~/components/ui/skeleton";
 
 interface HRProfile {
   id: string;
@@ -100,54 +101,6 @@ export default function SettingsPage() {
     void fetchSettings();
   }, []);
   
-  // For demo purposes, simulate data
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        // Demo HR profile
-        const demoHrProfile = {
-          id: '1',
-          companyName: 'Acme Recruiting',
-          companyWebsite: 'https://acme-recruiting.example.com',
-          companyDescription: 'Leading talent acquisition platform helping companies find and assess the right candidates.',
-          userId: 'user-1'
-        };
-        
-        // Demo user profile
-        const demoUserProfile = {
-          id: 'user-1',
-          name: 'John Smith',
-          email: 'john@acme-recruiting.example.com',
-          image: '',
-          role: 'HR' as const
-        };
-        
-        // Demo notification settings
-        const demoNotifications = {
-          assessmentCompleted: true,
-          newResponseSubmitted: true,
-          assessmentReminders: false,
-          marketingEmails: false
-        };
-        
-        setHrProfile(demoHrProfile);
-        setCompanyName(demoHrProfile.companyName);
-        setCompanyWebsite(demoHrProfile.companyWebsite ?? '');
-        setCompanyDescription(demoHrProfile.companyDescription ?? '');
-        
-        setUserProfile(demoUserProfile);
-        setUserName(demoUserProfile.name);
-        setUserEmail(demoUserProfile.email);
-        
-        setNotificationSettings(demoNotifications);
-        
-        setLoading(false);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
-  
   const saveCompanyProfile = async () => {
     setSaving(true);
     setSaveSuccess(false);
@@ -234,14 +187,6 @@ export default function SettingsPage() {
     }
   };
   
-  if (loading) {
-    return (
-      <div className="p-8 flex justify-center items-center">
-        <p>Loading settings...</p>
-      </div>
-    );
-  }
-  
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-8">
@@ -265,58 +210,86 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                  {userProfile?.image ? (
-                    <img 
-                      src={userProfile.image} 
-                      alt={userProfile.name ?? 'User avatar'} 
-                      className="h-full w-full object-cover"
+              {loading ? (
+                <>
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-20 w-20 rounded-full" />
+                    <div>
+                      <Skeleton className="h-9 w-32 mb-2" />
+                      <Skeleton className="h-4 w-48" />
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="userName">Name</Label>
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="userEmail">Email</Label>
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  
+                  <Skeleton className="h-20 w-full rounded-md" />
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-4">
+                    <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                      {userProfile?.image ? (
+                        <img 
+                          src={userProfile.image} 
+                          alt={userProfile.name ?? 'User avatar'} 
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-10 w-10 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div>
+                      <Button variant="outline" className="mb-2">Change Avatar</Button>
+                      <p className="text-xs text-muted-foreground">
+                        JPG, GIF or PNG. Max size of 2MB.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="userName">Name</Label>
+                    <Input 
+                      id="userName" 
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
                     />
-                  ) : (
-                    <User className="h-10 w-10 text-muted-foreground" />
-                  )}
-                </div>
-                <div>
-                  <Button variant="outline" className="mb-2">Change Avatar</Button>
-                  <p className="text-xs text-muted-foreground">
-                    JPG, GIF or PNG. Max size of 2MB.
-                  </p>
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div className="space-y-2">
-                <Label htmlFor="userName">Name</Label>
-                <Input 
-                  id="userName" 
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="userEmail">Email</Label>
-                <Input 
-                  id="userEmail" 
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  type="email"
-                />
-              </div>
-              
-              <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                <Shield className="h-5 w-5 text-blue-600" />
-                <div>
-                  <p className="text-sm font-medium">Account Role: {userProfile?.role}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {userProfile?.role === 'ADMIN' 
-                      ? 'You have full administrative access to all features.' 
-                      : 'You have HR access to manage assessments and candidates.'}
-                  </p>
-                </div>
-              </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="userEmail">Email</Label>
+                    <Input 
+                      id="userEmail" 
+                      value={userEmail}
+                      onChange={(e) => setUserEmail(e.target.value)}
+                      type="email"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                    <Shield className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium">Account Role: {userProfile?.role}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {userProfile?.role === 'ADMIN' 
+                          ? 'You have full administrative access to all features.' 
+                          : 'You have HR access to manage assessments and candidates.'}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
             <CardFooter className="flex justify-between border-t pt-4">
               <div>
@@ -324,7 +297,10 @@ export default function SettingsPage() {
                   <p className="text-sm text-green-600">Account information saved successfully!</p>
                 )}
               </div>
-              <Button onClick={saveUserProfile} disabled={saving && activeSaveSection === 'account'}>
+              <Button 
+                onClick={saveUserProfile} 
+                disabled={loading || (saving && activeSaveSection === 'account')}
+              >
                 {saving && activeSaveSection === 'account' ? 'Saving...' : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
@@ -352,58 +328,88 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name</Label>
-                <Input 
-                  id="companyName" 
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Your company name"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="companyWebsite">Company Website</Label>
-                <Input 
-                  id="companyWebsite" 
-                  value={companyWebsite}
-                  onChange={(e) => setCompanyWebsite(e.target.value)}
-                  placeholder="https://example.com"
-                  type="url"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="companyDescription">About Your Company</Label>
-                <Textarea 
-                  id="companyDescription" 
-                  value={companyDescription}
-                  onChange={(e) => setCompanyDescription(e.target.value)}
-                  placeholder="Brief description of your company"
-                  rows={4}
-                />
-                <p className="text-xs text-muted-foreground">
-                  This information will be displayed to candidates when they take your assessments.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Company Logo</Label>
-                <div className="flex items-center gap-4">
-                  <div className="border rounded-md p-4 w-24 h-24 flex items-center justify-center bg-muted">
-                    {hrProfile?.companyLogo ? (
-                      <img 
-                        src={hrProfile.companyLogo} 
-                        alt="Company Logo" 
-                        className="max-w-full max-h-full"
-                      />
-                    ) : (
-                      <Building className="h-10 w-10 text-muted-foreground" />
-                    )}
+              {loading ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName">Company Name</Label>
+                    <Skeleton className="h-10 w-full" />
                   </div>
-                  <Button>Upload Logo</Button>
-                </div>
-              </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="companyWebsite">Company Website</Label>
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="companyDescription">About Your Company</Label>
+                    <Skeleton className="h-32 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Company Logo</Label>
+                    <div className="flex items-center gap-4">
+                      <Skeleton className="h-24 w-24" />
+                      <Skeleton className="h-9 w-28" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName">Company Name</Label>
+                    <Input 
+                      id="companyName" 
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="Your company name"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="companyWebsite">Company Website</Label>
+                    <Input 
+                      id="companyWebsite" 
+                      value={companyWebsite}
+                      onChange={(e) => setCompanyWebsite(e.target.value)}
+                      placeholder="https://example.com"
+                      type="url"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="companyDescription">About Your Company</Label>
+                    <Textarea 
+                      id="companyDescription" 
+                      value={companyDescription}
+                      onChange={(e) => setCompanyDescription(e.target.value)}
+                      placeholder="Brief description of your company"
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This information will be displayed to candidates when they take your assessments.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Company Logo</Label>
+                    <div className="flex items-center gap-4">
+                      <div className="border rounded-md p-4 w-24 h-24 flex items-center justify-center bg-muted">
+                        {hrProfile?.companyLogo ? (
+                          <img 
+                            src={hrProfile.companyLogo} 
+                            alt="Company Logo" 
+                            className="max-w-full max-h-full"
+                          />
+                        ) : (
+                          <Building className="h-10 w-10 text-muted-foreground" />
+                        )}
+                      </div>
+                      <Button>Upload Logo</Button>
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
             <CardFooter className="flex justify-between border-t pt-4">
               <div>
@@ -411,7 +417,10 @@ export default function SettingsPage() {
                   <p className="text-sm text-green-600">Company profile saved successfully!</p>
                 )}
               </div>
-              <Button onClick={saveCompanyProfile} disabled={saving && activeSaveSection === 'company'}>
+              <Button 
+                onClick={saveCompanyProfile} 
+                disabled={loading || (saving && activeSaveSection === 'company')}
+              >
                 {saving && activeSaveSection === 'company' ? 'Saving...' : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
@@ -438,80 +447,103 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base">Assessment Completed</Label>
+              {loading ? (
+                <>
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i}>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Skeleton className="h-5 w-40" />
+                            <Skeleton className="h-4 w-64" />
+                          </div>
+                          <Skeleton className="h-5 w-10 rounded-full" />
+                        </div>
+                        {i < 4 && <Separator className="my-4" />}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <Skeleton className="h-14 w-full rounded-md" />
+                </>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">Assessment Completed</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Receive notifications when a candidate completes an assessment
+                        </p>
+                      </div>
+                      <Switch 
+                        checked={notificationSettings.assessmentCompleted}
+                        onCheckedChange={(checked) => 
+                          setNotificationSettings({...notificationSettings, assessmentCompleted: checked})
+                        }
+                      />
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">New Response Submitted</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Get notified when candidates submit new responses
+                        </p>
+                      </div>
+                      <Switch 
+                        checked={notificationSettings.newResponseSubmitted}
+                        onCheckedChange={(checked) => 
+                          setNotificationSettings({...notificationSettings, newResponseSubmitted: checked})
+                        }
+                      />
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">Assessment Reminders</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Receive reminders about expiring assessments and pending reviews
+                        </p>
+                      </div>
+                      <Switch 
+                        checked={notificationSettings.assessmentReminders}
+                        onCheckedChange={(checked) => 
+                          setNotificationSettings({...notificationSettings, assessmentReminders: checked})
+                        }
+                      />
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">Marketing & Updates</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Get emails about product updates, features, and marketing offers
+                        </p>
+                      </div>
+                      <Switch 
+                        checked={notificationSettings.marketingEmails}
+                        onCheckedChange={(checked) => 
+                          setNotificationSettings({...notificationSettings, marketingEmails: checked})
+                        }
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                    <Mail className="h-5 w-5 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
-                      Receive notifications when a candidate completes an assessment
+                      All notifications will be sent to <span className="font-medium">{userEmail}</span>
                     </p>
                   </div>
-                  <Switch 
-                    checked={notificationSettings.assessmentCompleted}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings({...notificationSettings, assessmentCompleted: checked})
-                    }
-                  />
-                </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base">New Response Submitted</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified when candidates submit new responses
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={notificationSettings.newResponseSubmitted}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings({...notificationSettings, newResponseSubmitted: checked})
-                    }
-                  />
-                </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base">Assessment Reminders</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive reminders about expiring assessments and pending reviews
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={notificationSettings.assessmentReminders}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings({...notificationSettings, assessmentReminders: checked})
-                    }
-                  />
-                </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base">Marketing & Updates</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Get emails about product updates, features, and marketing offers
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={notificationSettings.marketingEmails}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings({...notificationSettings, marketingEmails: checked})
-                    }
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  All notifications will be sent to <span className="font-medium">{userEmail}</span>
-                </p>
-              </div>
+                </>
+              )}
             </CardContent>
             <CardFooter className="flex justify-between border-t pt-4">
               <div>
@@ -519,7 +551,10 @@ export default function SettingsPage() {
                   <p className="text-sm text-green-600">Notification preferences saved successfully!</p>
                 )}
               </div>
-              <Button onClick={saveNotificationSettings} disabled={saving && activeSaveSection === 'notifications'}>
+              <Button 
+                onClick={saveNotificationSettings} 
+                disabled={loading || (saving && activeSaveSection === 'notifications')}
+              >
                 {saving && activeSaveSection === 'notifications' ? 'Saving...' : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
