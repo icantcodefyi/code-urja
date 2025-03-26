@@ -11,15 +11,8 @@ import {
   Download, Share2, MessageCircle, ThumbsUp, ThumbsDown, Clipboard
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatarr";
-
-// Function to generate avatar URL using DiceBear API
-const getAvatarUrl = (email: string) => {
-  // Create a hash from email for consistent avatar generation
-  const emailHash = btoa(email).substring(0, 10);
-  
-  // Using DiceBear Avatars API (https://www.dicebear.com/styles/avataaars)
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${emailHash}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
-};
+import { getAvatarUrlFromEmail } from "~/utils/avatar";
+import Image from "next/image";
 
 // Mock media responses data
 const mediaData = {
@@ -30,7 +23,7 @@ const mediaData = {
       candidateName: "John Doe",
       candidateEmail: "johndoe@example.com",
       questionText: "Describe your experience with React and TypeScript. What are some best practices you follow?",
-      videoUrl: "/candidates/johndoe/video1.mp4",
+      videoUrl: "/video.mp4",
       transcription: "I have been working with React for over 5 years and TypeScript for 3 years. I believe in component-based architecture and always ensure my components are reusable and well-typed. For state management, I prefer using React Context for simpler applications and Redux for more complex ones. I always follow the principle of lifting state up when needed and try to keep components pure and focused on a single responsibility. For TypeScript, I use interfaces over types when possible and make sure to properly type all props and state.",
       duration: 95, // seconds
       createdAt: "2023-10-18T14:30:00Z",
@@ -43,7 +36,7 @@ const mediaData = {
       candidateName: "Jane Smith",
       candidateEmail: "janesmith@example.com",
       questionText: "Tell us about a challenging project you worked on and how you approached it.",
-      videoUrl: "/candidates/janesmith/video1.mp4",
+      videoUrl: "/video.mp4",
       transcription: "One of the most challenging projects I worked on was a real-time dashboard for a financial services company. The challenge was handling large amounts of data while maintaining performance. I approached this by implementing data virtualization, efficient state management with Redux, and optimizing rendering cycles. I also used web workers for heavy calculations to keep the UI responsive. The project was successful, and the client saw a 40% improvement in dashboard loading time.",
       duration: 112, // seconds
       createdAt: "2023-10-16T10:45:00Z",
@@ -56,7 +49,7 @@ const mediaData = {
       candidateName: "Emily Brown",
       candidateEmail: "emilyb@example.com",
       questionText: "How do you stay updated with the latest frontend technologies?",
-      videoUrl: "/candidates/emilyb/video1.mp4",
+      videoUrl: "/video.mp4",
       transcription: "I stay updated with the latest frontend technologies through a combination of methods. I follow several tech blogs and newsletters like JavaScript Weekly and React Status. I'm also active on Twitter where I follow influential developers in the React ecosystem. I regularly attend virtual meetups and occasionally conferences when possible. I also dedicate time each week to experiment with new libraries and techniques, and I contribute to open source when I can. This multifaceted approach helps me stay current with trends and best practices.",
       duration: 88, // seconds
       createdAt: "2023-10-18T09:15:00Z",
@@ -71,7 +64,7 @@ const mediaData = {
       candidateName: "John Doe",
       candidateEmail: "johndoe@example.com",
       questionText: "Explain how you would optimize the performance of a React application.",
-      audioUrl: "/candidates/johndoe/audio1.mp3",
+      audioUrl: "/audio.mp3",
       transcription: "For React performance optimization, I follow several strategies. First, I use React.memo for functional components that render often but with the same props. I also implement shouldComponentUpdate for class components. I avoid anonymous functions in render methods to prevent unnecessary re-renders. I use the useCallback and useMemo hooks to memoize functions and computed values. For large lists, I implement virtualization using libraries like react-window. I also code-split using React.lazy and Suspense to reduce the initial bundle size.",
       duration: 78, // seconds
       createdAt: "2023-10-18T14:40:00Z",
@@ -83,7 +76,7 @@ const mediaData = {
       candidateName: "Jane Smith",
       candidateEmail: "janesmith@example.com",
       questionText: "Describe your experience with state management in React.",
-      audioUrl: "/candidates/janesmith/audio1.mp3",
+      audioUrl: "/audio.mp3",
       transcription: "I have extensive experience with various state management solutions in React. I've worked with Redux for large-scale applications, and I find it excellent for complex state management with its predictable state container and powerful developer tools. For medium-sized applications, I often use the Context API combined with useReducer, which provides a simpler way to manage global state without the Redux boilerplate. For smaller applications or components with local state, I use useState hooks. I've also experimented with newer libraries like Recoil and Jotai, which offer atomic approach to state management.",
       duration: 92, // seconds
       createdAt: "2023-10-16T11:00:00Z",
@@ -95,7 +88,7 @@ const mediaData = {
       candidateName: "David Wilson",
       candidateEmail: "davidw@example.com",
       questionText: "How do you handle error boundaries in React applications?",
-      audioUrl: "/candidates/davidw/audio1.mp3",
+      audioUrl: "/audio.mp3",
       transcription: "Error boundaries in React are components that catch JavaScript errors in their child component tree and display a fallback UI. I typically create a reusable ErrorBoundary component that wraps critical sections of my application. This component uses componentDidCatch lifecycle method to catch errors and update its state to render a fallback UI. I also log these errors to a monitoring service like Sentry. For asynchronous code and API calls, error boundaries don't catch those errors, so I use try/catch blocks and handle promise rejections appropriately. This approach provides a better user experience by preventing the entire application from crashing when errors occur.",
       duration: 65, // seconds
       createdAt: "2023-10-19T13:20:00Z",
@@ -113,7 +106,20 @@ export default function MediaResponses() {
   const [isPlaying, setIsPlaying] = useState<PlayingState>({});
   
   // Filter and sort media data
-  const filteredData = (tabValue === 'video' ? mediaData.video : mediaData.audio).filter(item => {
+  const filteredVideoData = mediaData.video.filter(item => {
+    return (
+      item.candidateName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.questionText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.transcription.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }).sort((a, b) => {
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+    
+    return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+  });
+  
+  const filteredAudioData = mediaData.audio.filter(item => {
     return (
       item.candidateName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.questionText.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -198,15 +204,15 @@ export default function MediaResponses() {
         </TabsList>
         
         <TabsContent value="video" className="space-y-6">
-          {filteredData.length > 0 ? (
-            filteredData.map((video) => (
+          {filteredVideoData.length > 0 ? (
+            filteredVideoData.map((video) => (
               <Card key={video.id}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between">
                     <div className="flex items-start gap-3">
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                         <Avatar>
-                          <AvatarImage src={getAvatarUrl(video.candidateEmail)} alt={video.candidateName} />
+                          <AvatarImage src={getAvatarUrlFromEmail(video.candidateEmail)} alt={video.candidateName} />
                           <AvatarFallback>{video.candidateName.charAt(0)}</AvatarFallback>
                         </Avatar>
                       </div>
@@ -231,6 +237,22 @@ export default function MediaResponses() {
                   </div>
                   
                   <div className="relative aspect-video bg-black/5 rounded-lg overflow-hidden">
+                    {!isPlaying[video.id] ? (
+                      <Image 
+                        src={video.thumbnail || "/assets/video_banner.png"} 
+                        alt="Video thumbnail" 
+                        fill 
+                        className="object-cover"
+                        priority
+                      />
+                    ) : (
+                      <video 
+                        src={video.videoUrl} 
+                        className="w-full h-full object-cover"
+                        autoPlay
+                        controls
+                      />
+                    )}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Button 
                         variant="outline" 
@@ -320,15 +342,15 @@ export default function MediaResponses() {
         </TabsContent>
         
         <TabsContent value="audio" className="space-y-6">
-          {filteredData.length > 0 ? (
-            filteredData.map((audio) => (
+          {filteredAudioData.length > 0 ? (
+            filteredAudioData.map((audio) => (
               <Card key={audio.id}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between">
                     <div className="flex items-start gap-3">
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                         <Avatar>
-                          <AvatarImage src={getAvatarUrl(audio.candidateEmail)} alt={audio.candidateName} />
+                          <AvatarImage src={getAvatarUrlFromEmail(audio.candidateEmail)} alt={audio.candidateName} />
                           <AvatarFallback>{audio.candidateName.charAt(0)}</AvatarFallback>
                         </Avatar>
                       </div>

@@ -73,7 +73,7 @@ const data = {
     },
     {
       title: "Settings",
-      url: "/app/settings",
+      url: "#",
       icon: <Settings className="size-4" />,
     },
   ],

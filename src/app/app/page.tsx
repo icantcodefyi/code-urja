@@ -8,6 +8,7 @@ import {
   BarChart2, Users, CheckCircle, XCircle, Clock, Video, AudioLines, 
   FileText, ChevronUp, ChevronDown, Bell, Download
 } from "lucide-react";
+import { getAvatarUrl } from "~/utils/avatar";
 
 // Mock analytics data
 const analyticsData = {
@@ -373,8 +374,13 @@ export default function AnalyticsDashboard() {
             <div className="space-y-4">
               {analyticsData.recentActivity.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                    {getActivityIcon(activity.type)}
+                  <div className="h-8 w-8 rounded-full overflow-hidden">
+                    <img 
+                      src={getAvatarUrl(activity.id, activity.candidateName)}
+                      alt={activity.candidateName}
+                      width={32}
+                      height={32}
+                    />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">

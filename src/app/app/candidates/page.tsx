@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -10,6 +11,7 @@ import {
   User, Search, Filter, ArrowDownUp, MoreHorizontal, CheckCircle, 
   XCircle, DownloadCloud, Video, AudioLines
 } from "lucide-react";
+import { getAvatarUrlFromName } from "~/utils/avatar";
 
 // Mock data for candidates
 const candidatesData = [
@@ -222,8 +224,13 @@ export default function CandidatesList() {
               <div className="grid grid-cols-12 gap-3 items-center">
                 <div className="col-span-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-5 w-5 text-primary" />
+                    <div className="h-10 w-10 rounded-full overflow-hidden">
+                      <Image 
+                        src={getAvatarUrlFromName(candidate.id, candidate.firstName, candidate.lastName)}
+                        alt={`${candidate.firstName} ${candidate.lastName}`}
+                        width={40}
+                        height={40}
+                      />
                     </div>
                     <div>
                       <div className="font-medium">{candidate.firstName} {candidate.lastName}</div>
