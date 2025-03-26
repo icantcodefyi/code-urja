@@ -32,6 +32,7 @@ interface Question {
 interface Response {
   type: 'VIDEO' | 'AUDIO' | 'TEXT';
   content: string;
+  serverUrl?: string; // URL from UploadThing after successful upload
   questionId: string;
   questionText: string;
 }
@@ -177,6 +178,18 @@ export default function AssessmentPage() {
     setSubmitError(null);
     
     try {
+      // For each response, use serverUrl if available
+      const processedResponses = Object.values(responses).map((response: Response) => {
+        // For video and audio responses, prefer the serverUrl when available
+        if ((response.type === 'VIDEO' || response.type === 'AUDIO') && response.serverUrl) {
+          return {
+            ...response,
+            content: response.serverUrl // Use the uploadthing URL for server storage
+          };
+        }
+        return response;
+      });
+
       const response = await fetch('/api/assessments/submit', {
         method: 'POST',
         headers: {
@@ -187,7 +200,7 @@ export default function AssessmentPage() {
           candidateName: name,
           candidateEmail: email,
           resumeUrl,
-          responses,
+          responses: processedResponses,
         }),
       });
       
@@ -243,12 +256,13 @@ export default function AssessmentPage() {
   };
   
   // Handle video recording complete
-  const handleVideoRecordingComplete = (questionId: string, videoUrl: string, questionText: string) => {
+  const handleVideoRecordingComplete = (questionId: string, videoUrl: string, questionText: string, serverUrl?: string) => {
     setResponses({
       ...responses,
       [questionId]: {
         type: 'VIDEO',
         content: videoUrl,
+        serverUrl,
         questionId,
         questionText
       }
@@ -256,12 +270,13 @@ export default function AssessmentPage() {
   };
   
   // Handle audio recording complete
-  const handleAudioRecordingComplete = (questionId: string, audioUrl: string, questionText: string) => {
+  const handleAudioRecordingComplete = (questionId: string, audioUrl: string, questionText: string, serverUrl?: string) => {
     setResponses({
       ...responses,
       [questionId]: {
         type: 'AUDIO',
         content: audioUrl,
+        serverUrl,
         questionId,
         questionText
       }
@@ -309,8 +324,8 @@ export default function AssessmentPage() {
               </div>
             ) : (
               <VideoRecorder 
-                onRecordingComplete={(videoUrl) => 
-                  handleVideoRecordingComplete(question.id, videoUrl, question.text)
+                onRecordingComplete={(videoUrl, serverUrl) => 
+                  handleVideoRecordingComplete(question.id, videoUrl, question.text, serverUrl)
                 }
                 onError={(err) => console.error("Video recording error:", err)}
                 maxDuration={assessment?.maxDuration ? assessment.maxDuration * 60 : 120}
@@ -354,8 +369,8 @@ export default function AssessmentPage() {
               </div>
             ) : (
               <AudioRecorder 
-                onRecordingComplete={(audioUrl) => 
-                  handleAudioRecordingComplete(question.id, audioUrl, question.text)
+                onRecordingComplete={(audioUrl, serverUrl) => 
+                  handleAudioRecordingComplete(question.id, audioUrl, question.text, serverUrl)
                 }
                 onError={(err) => console.error("Audio recording error:", err)}
                 maxDuration={assessment?.maxDuration ? assessment.maxDuration * 60 : 120}

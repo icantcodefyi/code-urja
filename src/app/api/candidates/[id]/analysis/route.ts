@@ -49,6 +49,21 @@ export async function GET(
               }
             }
           }
+        },
+        videoResponses: {
+          include: {
+            question: true
+          }
+        },
+        audioResponses: {
+          include: {
+            question: true
+          }
+        },
+        textResponses: {
+          include: {
+            question: true
+          }
         }
       },
     });
@@ -63,7 +78,12 @@ export async function GET(
       name: candidate.user?.name ?? 'Unknown',
       email: candidate.user?.email ?? 'Unknown',
       analysis: candidate.analysis ?? null,
-      assessment: candidate.submissions[0]?.assessment ?? null
+      assessment: candidate.submissions[0]?.assessment ?? null,
+      mediaResponses: {
+        video: candidate.videoResponses,
+        audio: candidate.audioResponses,
+        text: candidate.textResponses
+      }
     };
     
     return NextResponse.json(response);

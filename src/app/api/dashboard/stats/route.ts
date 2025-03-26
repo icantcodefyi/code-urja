@@ -26,16 +26,17 @@ export async function GET(req: Request) {
       where: { createdBy: userId }
     });
     
-    const activeAssessments = await db.assessment.count({
+    // Get active assessments by checking submissions status
+    const activeAssessments = await db.assessmentSubmission.count({
       where: {
-        createdBy: userId,
+        assessment: { createdBy: userId },
         status: { in: ['PENDING', 'IN_PROGRESS'] }
       }
     });
     
-    const completedAssessments = await db.assessment.count({
+    const completedAssessments = await db.assessmentSubmission.count({
       where: {
-        createdBy: userId,
+        assessment: { createdBy: userId },
         status: { in: ['COMPLETED', 'REVIEWED'] }
       }
     });
@@ -43,12 +44,13 @@ export async function GET(req: Request) {
     // Get candidate stats
     const totalCandidates = await db.candidate.count();
     
-    // Get responses stats
+    // Get responses stats - count questions without any responses
     const pendingResponses = await db.question.count({
       where: {
         assessment: { createdBy: userId },
-        videoResponse: null,
-        audioResponse: null,
+        videoResponses: { none: {} },
+        audioResponses: { none: {} },
+        textResponses: { none: {} }
       }
     });
     

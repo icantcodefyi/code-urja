@@ -45,6 +45,34 @@ interface CandidateDetails {
     title: string;
     status: string;
   } | null;
+  mediaResponses: {
+    video: Array<{
+      id: string;
+      videoUrl: string;
+      transcription: string | null;
+      question: {
+        id: string;
+        text: string;
+      };
+    }>;
+    audio: Array<{
+      id: string;
+      audioUrl: string;
+      transcription: string | null;
+      question: {
+        id: string;
+        text: string;
+      };
+    }>;
+    text: Array<{
+      id: string;
+      content: string;
+      question: {
+        id: string;
+        text: string;
+      };
+    }>;
+  };
 }
 
 function getRecommendationColor(recommendation: string) {
@@ -76,6 +104,7 @@ export default function CandidateDetailPage() {
   const candidateId = params.id as string;
   
   const [candidate, setCandidate] = useState<CandidateDetails | null>(null);
+  console.log(candidate?.mediaResponses);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -83,7 +112,7 @@ export default function CandidateDetailPage() {
     const fetchCandidateDetails = async () => {
       try {
         const response = await fetch(`/api/candidates/${candidateId}/analysis`);
-        
+
         if (response.ok) {
           const data = await response.json() as CandidateDetails;
           setCandidate(data);
@@ -363,6 +392,97 @@ export default function CandidateDetailPage() {
               </ul>
             </CardContent>
           </Card>
+
+          {/* Add the Responses Card after the Feedback Card */}
+          {/* Candidate's Media Responses */}
+          {candidate.mediaResponses && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2 text-blue-600" />
+                  Assessment Responses
+                </CardTitle>
+                <CardDescription>Candidate&apos;s responses to assessment questions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Video Responses */}
+                {candidate.mediaResponses.video.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Video Responses</h3>
+                    <div className="grid grid-cols-1 gap-6">
+                      {candidate.mediaResponses.video.map((response) => (
+                        <div key={response.id} className="border rounded-lg p-4 bg-muted/20">
+                          <h4 className="font-medium mb-2">{response.question.text}</h4>
+                          <div className="aspect-video mb-4">
+                            <video 
+                              className="w-full h-full rounded-md" 
+                              src={response.videoUrl} 
+                              controls
+                            />
+                          </div>
+                          {response.transcription && (
+                            <div className="mt-2">
+                              <h5 className="text-sm font-medium text-muted-foreground mb-1">Transcription:</h5>
+                              <p className="text-sm whitespace-pre-line">{response.transcription}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Audio Responses */}
+                {candidate.mediaResponses.audio.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Audio Responses</h3>
+                    <div className="grid grid-cols-1 gap-6">
+                      {candidate.mediaResponses.audio.map((response) => (
+                        <div key={response.id} className="border rounded-lg p-4 bg-muted/20">
+                          <h4 className="font-medium mb-2">{response.question.text}</h4>
+                          <audio 
+                            className="w-full mb-4" 
+                            src={response.audioUrl} 
+                            controls
+                          />
+                          {response.transcription && (
+                            <div className="mt-2">
+                              <h5 className="text-sm font-medium text-muted-foreground mb-1">Transcription:</h5>
+                              <p className="text-sm whitespace-pre-line">{response.transcription}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Text Responses */}
+                {candidate.mediaResponses.text.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Text Responses</h3>
+                    <div className="grid grid-cols-1 gap-6">
+                      {candidate.mediaResponses.text.map((response) => (
+                        <div key={response.id} className="border rounded-lg p-4 bg-muted/20">
+                          <h4 className="font-medium mb-2">{response.question.text}</h4>
+                          <p className="whitespace-pre-line">{response.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No responses message */}
+                {candidate.mediaResponses.video.length === 0 && 
+                 candidate.mediaResponses.audio.length === 0 && 
+                 candidate.mediaResponses.text.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No responses found for this candidate.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
       

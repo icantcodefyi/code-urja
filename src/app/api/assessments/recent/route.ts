@@ -30,19 +30,19 @@ export async function GET(req: Request) {
       select: {
         id: true,
         title: true,
-        status: true,
-        candidate: {
+        submissions: {
           select: {
             id: true,
+            status: true,
           }
         },
         questions: {
           select: {
             id: true,
-            videoResponse: {
+            videoResponses: {
               select: { id: true }
             },
-            audioResponse: {
+            audioResponses: {
               select: { id: true }
             }
           }
@@ -58,15 +58,29 @@ export async function GET(req: Request) {
     const formattedAssessments = assessments.map(assessment => {
       // Count responses received
       const responsesReceived = assessment.questions.reduce((count, question) => {
-        const hasResponse = question.videoResponse !== null || question.audioResponse !== null;
+        const hasResponse = question.videoResponses.length > 0 || question.audioResponses.length > 0;
         return count + (hasResponse ? 1 : 0);
       }, 0);
+      
+      // Determine status from submissions
+      const submissionStatuses = assessment.submissions.map(sub => sub.status);
+      let status = "PENDING";
+      
+      if (submissionStatuses.includes("IN_PROGRESS")) {
+        status = "IN_PROGRESS";
+      }
+      if (submissionStatuses.includes("COMPLETED")) {
+        status = "COMPLETED";
+      }
+      if (submissionStatuses.includes("REVIEWED")) {
+        status = "REVIEWED";
+      }
       
       return {
         id: assessment.id,
         title: assessment.title,
-        status: assessment.status,
-        candidatesInvited: assessment.candidate !== null ? 1 : 0, // If this is individual assessment
+        status,
+        candidatesInvited: assessment.submissions.length,
         responsesReceived
       };
     });

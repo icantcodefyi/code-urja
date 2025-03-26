@@ -17,6 +17,7 @@ interface AssessmentSubmissionPayload {
   responses: Record<string, {
     type: 'VIDEO' | 'AUDIO' | 'TEXT';
     content: string;         // Text response or media URL
+    serverUrl?: string;      // UploadThing URL
     questionId: string;
     questionText: string;
   }>;
@@ -163,8 +164,18 @@ export async function POST(req: Request) {
         // For video and audio, transcribe the content
         if (response.type === 'VIDEO' || response.type === 'AUDIO') {
           try {
-            // Check if this is a blob URL
-            if (response.content.startsWith('blob:')) {
+            // Process serverUrl first if available (ensure it has https:// prefix if needed)
+            let processedServerUrl = response.serverUrl;
+            if (response.serverUrl && response.serverUrl.includes('utfs.io') && !response.serverUrl.startsWith('http')) {
+              processedServerUrl = `https://${response.serverUrl}`;
+            }
+            
+            // Prioritize processedServerUrl if available, only fall back to content URL if necessary
+            // This fixes the issue where blob URLs were being saved instead of UploadThing URLs
+            const mediaUrl = processedServerUrl ?? response.content;
+            
+            // Check if this is a blob URL and no serverUrl is available
+            if (mediaUrl.startsWith('blob:') && !response.serverUrl) {
               console.log(`Warning: ${response.type} URL is a blob URL which cannot be processed server-side`);
               
               // Create a placeholder transcription but still record the response
@@ -185,7 +196,7 @@ export async function POST(req: Request) {
                   await prisma.videoResponse.update({
                     where: { id: existingResponse.id },
                     data: { 
-                      videoUrl: response.content,
+                      videoUrl: mediaUrl,
                       transcription: placeholder
                     }
                   });
@@ -196,7 +207,7 @@ export async function POST(req: Request) {
                       candidateId: candidate.id,
                       questionId: response.questionId,
                       submissionId: submissionId,
-                      videoUrl: response.content,
+                      videoUrl: mediaUrl,
                       transcription: placeholder,
                       duration: 0, // Unknown duration
                     }
@@ -216,7 +227,7 @@ export async function POST(req: Request) {
                   await prisma.audioResponse.update({
                     where: { id: existingResponse.id },
                     data: { 
-                      audioUrl: response.content,
+                      audioUrl: mediaUrl,
                       transcription: placeholder
                     }
                   });
@@ -227,7 +238,7 @@ export async function POST(req: Request) {
                       candidateId: candidate.id,
                       questionId: response.questionId,
                       submissionId: submissionId,
-                      audioUrl: response.content,
+                      audioUrl: mediaUrl,
                       transcription: placeholder,
                       duration: 0, // Unknown duration
                     }
@@ -251,13 +262,74 @@ export async function POST(req: Request) {
               duration: 60, // Default to 60 seconds if not known
             };
             
-            // Ensure media URL is properly formatted
-            let processedMediaUrl = response.content;
-            if (response.content.includes('utfs.io') && !response.content.startsWith('http')) {
-              processedMediaUrl = `https://${response.content}`;
+            // Call transcribeMedia with the already processed mediaUrl
+            const transcription = await transcribeMedia(mediaUrl, transcriptionOptions);
+            
+            // Store the media response in the database
+            if (response.type === 'VIDEO') {
+              // Check if there's an existing video response
+              const existingResponse = await prisma.videoResponse.findFirst({
+                where: {
+                  questionId: response.questionId,
+                  submissionId: submissionId
+                }
+              });
+              
+              if (existingResponse) {
+                // Update existing response
+                await prisma.videoResponse.update({
+                  where: { id: existingResponse.id },
+                  data: { 
+                    videoUrl: mediaUrl,
+                    transcription: transcription
+                  }
+                });
+              } else {
+                // Create new response
+                await prisma.videoResponse.create({
+                  data: {
+                    candidateId: candidate.id,
+                    questionId: response.questionId,
+                    submissionId: submissionId,
+                    videoUrl: mediaUrl,
+                    transcription: transcription,
+                    duration: 60, // Default duration
+                  }
+                });
+              }
+            } else {
+              // Check if there's an existing audio response
+              const existingResponse = await prisma.audioResponse.findFirst({
+                where: {
+                  questionId: response.questionId,
+                  submissionId: submissionId
+                }
+              });
+              
+              if (existingResponse) {
+                // Update existing response
+                await prisma.audioResponse.update({
+                  where: { id: existingResponse.id },
+                  data: { 
+                    audioUrl: mediaUrl,
+                    transcription: transcription
+                  }
+                });
+              } else {
+                // Create new response
+                await prisma.audioResponse.create({
+                  data: {
+                    candidateId: candidate.id,
+                    questionId: response.questionId,
+                    submissionId: submissionId,
+                    audioUrl: mediaUrl,
+                    transcription: transcription,
+                    duration: 60, // Default duration
+                  }
+                });
+              }
             }
             
-            const transcription = await transcribeMedia(processedMediaUrl, transcriptionOptions);
             return {
               ...response,
               transcription,

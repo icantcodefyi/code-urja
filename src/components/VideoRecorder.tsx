@@ -5,9 +5,10 @@ import { useReactMediaRecorder } from "react-media-recorder";
 import { Button } from "~/components/ui/button";
 import { Camera, StopCircle, RotateCw, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useUploadThing } from "~/utils/uploadthing";
 
 interface VideoRecorderProps {
-  onRecordingComplete: (videoUrl: string) => void;
+  onRecordingComplete: (videoUrl: string, serverUrl?: string) => void;
   onError?: (error: Error) => void;
   maxDuration?: number; // in seconds
 }
@@ -20,10 +21,36 @@ export default function VideoRecorder({
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [recordingError, setRecordingError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [serverUrl, setServerUrl] = useState<string | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const liveVideoRef = useRef<HTMLVideoElement>(null);
   const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Use the uploadthing hook
+  const { startUpload, isUploading: isUploadingFile } = useUploadThing("videoUploader", {
+    onClientUploadComplete: (res) => {
+      if (res && res.length > 0 && res[0]?.url) {
+        const uploadedUrl = res[0].url;
+        setServerUrl(uploadedUrl);
+        
+        // Also update the parent with the server URL if recording is already confirmed
+        if (isConfirmed) {
+          onRecordingComplete(mediaBlobUrl ?? "", uploadedUrl);
+        }
+        
+        console.log("Video uploaded to server:", uploadedUrl);
+      }
+      setIsUploading(false);
+    },
+    onUploadError: (error) => {
+      console.error("Upload error:", error);
+      setRecordingError(`Error uploading video: ${error.message}`);
+      if (onError) onError(error);
+      setIsUploading(false);
+    }
+  });
 
   // Set up react-media-recorder
   const {
@@ -52,6 +79,11 @@ export default function VideoRecorder({
       liveVideoRef.current.srcObject = previewStream;
     }
   }, [previewStream]);
+
+  // Update isUploading state when the uploadthing status changes
+  useEffect(() => {
+    setIsUploading(isUploadingFile);
+  }, [isUploadingFile]);
 
   // Handle recording timer
   useEffect(() => {
@@ -105,17 +137,57 @@ export default function VideoRecorder({
     setRecordingTime(0);
     clearBlobUrl();
     setRecordingError(null);
+    setServerUrl(null);
+  };
+  
+  // Utility to convert blob to File
+  const blobToFile = async (blobUrl: string, fileName: string): Promise<File> => {
+    const response = await fetch(blobUrl);
+    const blob = await response.blob();
+    return new File([blob], fileName, { type: 'video/mp4' });
+  };
+
+  // Upload video file to server
+  const uploadToServer = async (blobUrl: string): Promise<string | null> => {
+    try {
+      setIsUploading(true);
+      
+      // Convert blob to File
+      const file = await blobToFile(blobUrl, `video-recording-${Date.now()}.mp4`);
+      
+      // Use uploadthing to upload the file
+      void startUpload([file]);
+      
+      // The result will be handled in the onClientUploadComplete callback
+      return null;
+    } catch (error) {
+      console.error("Upload error:", error);
+      setIsUploading(false);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setRecordingError(`Error uploading video: ${errorMessage}`);
+      if (onError && error instanceof Error) onError(error);
+      return null;
+    }
   };
   
   // Confirm the recording
-  const confirmRecording = () => {
+  const confirmRecording = async () => {
     if (mediaBlobUrl) {
       setIsConfirmed(true);
-      onRecordingComplete(mediaBlobUrl);
-      // Show toast notification about transcription
+      
+      // First notify the parent about the local recording and server URL if available
+      onRecordingComplete(mediaBlobUrl, serverUrl ?? undefined);
+      
+      // Show toast notification
       toast.info("Video recorded", {
         description: "Your video will be transcribed when you submit the assessment."
       });
+      
+      // Initiate upload in the background
+      if (!serverUrl) {
+        // Only upload if not already uploaded
+        void uploadToServer(mediaBlobUrl);
+      }
     }
   };
   
@@ -182,6 +254,13 @@ export default function VideoRecorder({
           </div>
         )}
         
+        {isUploading && (
+          <div className="absolute top-4 left-4 bg-blue-500 text-white px-2 py-1 rounded-md flex items-center gap-1">
+            <span className="animate-pulse">●</span>
+            <span>Uploading...</span>
+          </div>
+        )}
+        
         {status === 'acquiring_media' && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
             <p>Getting camera access...</p>
@@ -238,12 +317,13 @@ export default function VideoRecorder({
             </Button>
             
             <Button
-              onClick={confirmRecording}
+              onClick={() => void confirmRecording()}
               variant="default"
               className="flex-1"
+              disabled={isUploading}
             >
               <CheckCircle className="mr-2 h-4 w-4" />
-              Use This Recording
+              {isUploading ? 'Uploading...' : 'Use This Recording'}
             </Button>
           </div>
         )}
@@ -265,6 +345,7 @@ export default function VideoRecorder({
         <div className="text-xs text-muted-foreground mt-2 border-t pt-2">
           <p>Status: {status}</p>
           {mediaBlobUrl && <p>Media URL: {mediaBlobUrl.substring(0, 30)}...</p>}
+          {serverUrl && <p>Server URL: {serverUrl.substring(0, 30)}...</p>}
         </div>
       )}
     </div>

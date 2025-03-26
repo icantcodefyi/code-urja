@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
+import { AssessmentStatus } from "@prisma/client";
 
 export async function GET(req: Request) {
   try {
@@ -29,20 +30,24 @@ export async function GET(req: Request) {
       include: {
         questions: {
           include: {
-            videoResponse: true,
-            audioResponse: true
+            videoResponses: true,
+            audioResponses: true
           }
         },
-        candidate: {
+        submissions: {
           include: {
-            user: {
-              select: {
-                name: true,
-                email: true
+            candidate: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                    email: true
+                  }
+                }
               }
             }
           }
-        },
+        }
       },
       orderBy: {
         createdAt: 'desc'
@@ -51,19 +56,25 @@ export async function GET(req: Request) {
     
     // Transform the data for the frontend
     const assessmentsList = assessments.map(assessment => {
-      const responsesReceived = assessment.questions.filter(q => 
-        q.videoResponse !== null || q.audioResponse !== null
-      ).length;
+      // Find the candidate information from the first submission if available
+      const submission = assessment.submissions[0];
+      const candidateName = submission?.candidate?.user?.name ?? 'Unknown';
+      const candidateEmail = submission?.candidate?.user?.email ?? 'unknown@example.com';
+      
+      // Count responses across all questions
+      const responsesReceived = assessment.questions.reduce((count, question) => {
+        return count + question.videoResponses.length + question.audioResponses.length;
+      }, 0);
       
       return {
         id: assessment.id,
         title: assessment.title,
         description: assessment.description,
-        status: assessment.status,
+        status: submission?.status ?? AssessmentStatus.PENDING,
         uniqueLink: assessment.uniqueLink,
         createdAt: assessment.createdAt.toISOString(),
-        candidateName: assessment.candidate.user?.name ?? 'Unknown',
-        candidateEmail: assessment.candidate.user?.email ?? 'unknown@example.com',
+        candidateName,
+        candidateEmail,
         aiAnalysisEnabled: assessment.aiAnalysisEnabled,
         maxDuration: assessment.maxDuration,
         questionCount: assessment.questions.length,
