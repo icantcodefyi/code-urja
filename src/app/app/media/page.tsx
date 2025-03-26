@@ -8,8 +8,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { 
   Video, AudioLines, Search, Filter, PlayCircle, PauseCircle,
-  Download, Share2, MessageCircle, User, ThumbsUp, ThumbsDown, Clipboard
+  Download, Share2, MessageCircle, ThumbsUp, ThumbsDown, Clipboard
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatarr";
+
+// Function to generate avatar URL using DiceBear API
+const getAvatarUrl = (email: string) => {
+  // Create a hash from email for consistent avatar generation
+  const emailHash = btoa(email).substring(0, 10);
+  
+  // Using DiceBear Avatars API (https://www.dicebear.com/styles/avataaars)
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${emailHash}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+};
 
 // Mock media responses data
 const mediaData = {
@@ -194,8 +204,11 @@ export default function MediaResponses() {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="h-5 w-5 text-primary" />
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                        <Avatar>
+                          <AvatarImage src={getAvatarUrl(video.candidateEmail)} alt={video.candidateName} />
+                          <AvatarFallback>{video.candidateName.charAt(0)}</AvatarFallback>
+                        </Avatar>
                       </div>
                       <div>
                         <CardTitle className="text-base flex items-center gap-1">
@@ -313,8 +326,11 @@ export default function MediaResponses() {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="h-5 w-5 text-primary" />
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                        <Avatar>
+                          <AvatarImage src={getAvatarUrl(audio.candidateEmail)} alt={audio.candidateName} />
+                          <AvatarFallback>{audio.candidateName.charAt(0)}</AvatarFallback>
+                        </Avatar>
                       </div>
                       <div>
                         <CardTitle className="text-base flex items-center gap-1">

@@ -25,7 +25,7 @@ const data = {
     },
     {
       title: "Assessments",
-      url: "/app/assessments",
+      url: "/app/assessments/create",
       icon: <FileText className="size-4" />,
       items: [
         {
@@ -65,50 +65,11 @@ const data = {
       title: "Media Responses",
       url: "/app/media",
       icon: <Video className="size-4" />,
-      items: [
-        {
-          title: "Video Responses",
-          url: "/app/media/video",
-        },
-        {
-          title: "Audio Responses",
-          url: "/app/media/audio",
-        },
-        {
-          title: "Transcripts",
-          url: "/app/media/transcripts",
-        },
-      ],
     },
     {
       title: "Jobs",
       url: "/app/jobs",
       icon: <Briefcase className="size-4" />,
-      items: [
-        {
-          title: "Open Positions",
-          url: "/app/jobs/open",
-        },
-        {
-          title: "Closed Positions",
-          url: "/app/jobs/closed",
-        },
-      ],
-    },
-    {
-      title: "Analytics",
-      url: "/app/analytics",
-      icon: <BarChart2 className="size-4" />,
-      items: [
-        {
-          title: "Candidate Insights",
-          url: "/app/analytics/candidates",
-        },
-        {
-          title: "Assessment Performance",
-          url: "/app/analytics/assessments",
-        },
-      ],
     },
     {
       title: "Settings",
