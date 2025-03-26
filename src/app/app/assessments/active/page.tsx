@@ -1,31 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatarr";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import {
   Search,
   Filter,
-  ChevronRight,
-  FileText,
-  Users,
   Clock,
-  Calendar,
-  BarChart,
-  Award,
-  CheckCircle2,
+  PlusCircle,
+  Copy,
+  ExternalLink,
+  SlidersHorizontal,
+  Hourglass,
+  CircleCheck,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
+import Link from 'next/link';
+import Badge from "~/components/ui/badgee";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "~/components/ui/table";
+
+interface Assessment {
+  id: string;
+  title: string;
+  description: string | null;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'REVIEWED';
+  uniqueLink: string;
+  createdAt: string;
+  candidateName: string;
+  candidateEmail: string;
+  aiAnalysisEnabled: boolean;
+  maxDuration: number | null;
+  questionCount: number;
+  responsesReceived: number;
+}
 
 // Custom Badge component with variant support
 const CustomBadge = ({
@@ -54,82 +69,40 @@ const CustomBadge = ({
   );
 };
 
-// Mock data for active assessments
-const activeAssessments = [
-  {
-    id: "a1",
-    title: "Frontend Developer Assessment",
-    description: "Technical assessment for React, TypeScript, and UI/UX skills",
-    status: "IN_PROGRESS",
-    candidatesTotal: 12,
-    candidatesCompleted: 7,
-    questionsCount: 5,
-    createdAt: "2023-10-05T10:00:00Z",
-    expiresAt: "2023-11-05T10:00:00Z",
-    averageScore: 78.5,
-    highestScore: 92,
-    topCandidates: [
-      { name: "Jane Doe", score: 92, email: "jane@example.com" },
-      { name: "John Smith", score: 88, email: "john@example.com" },
-      { name: "Emily Wong", score: 85, email: "emily@example.com" },
-    ],
-  },
-  {
-    id: "a2",
-    title: "Product Manager Interview",
-    description: "Assessment for product vision, strategy, and execution",
-    status: "IN_PROGRESS",
-    candidatesTotal: 8,
-    candidatesCompleted: 3,
-    questionsCount: 6,
-    createdAt: "2023-10-10T14:00:00Z",
-    expiresAt: "2023-11-10T14:00:00Z",
-    averageScore: 71.2,
-    highestScore: 85,
-    topCandidates: [
-      { name: "David Chen", score: 85, email: "david@example.com" },
-      { name: "Sarah Jackson", score: 79, email: "sarah@example.com" },
-      { name: "Michael Brown", score: 76, email: "michael@example.com" },
-    ],
-  },
-  {
-    id: "a3",
-    title: "Full-Stack Developer Assessment",
-    description: "Comprehensive evaluation of full-stack development skills",
-    status: "IN_PROGRESS",
-    candidatesTotal: 15,
-    candidatesCompleted: 9,
-    questionsCount: 8,
-    createdAt: "2023-10-01T09:00:00Z",
-    expiresAt: "2023-11-01T09:00:00Z",
-    averageScore: 75.8,
-    highestScore: 90,
-    topCandidates: [
-      { name: "Alex Rivera", score: 90, email: "alex@example.com" },
-      { name: "Priya Patel", score: 87, email: "priya@example.com" },
-      { name: "James Wilson", score: 84, email: "james@example.com" },
-    ],
-  },
-];
-
-// Function to generate avatar URL using DiceBear API
-const getAvatarUrl = (email: string) => {
-  // Create a hash from email for consistent avatar generation
-  const emailHash = btoa(email).substring(0, 10);
-
-  // Using DiceBear Avatars API (https://www.dicebear.com/styles/avataaars)
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${emailHash}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
-};
-
 export default function ActiveAssessments() {
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [tabValue, setTabValue] = useState("all");
 
+  useEffect(() => {
+    const fetchAssessments = async () => {
+      try {
+        const response = await fetch('/api/assessments/list');
+        
+        if (response.ok) {
+          const data = await response.json();
+          setAssessments(data.assessments);
+        } else {
+          console.error('Failed to fetch assessments');
+        }
+      } catch (error) {
+        console.error('Error fetching assessments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    void fetchAssessments();
+  }, []);
+  
   // Filter assessments based on search and tab
-  const filteredAssessments = activeAssessments.filter((assessment) => {
+  const filteredAssessments = assessments.filter((assessment) => {
     const matchesSearch =
       assessment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      assessment.description.toLowerCase().includes(searchQuery.toLowerCase());
+      assessment.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assessment.candidateName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assessment.candidateEmail.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (tabValue === "all") return matchesSearch;
     if (tabValue === "recent") {
@@ -143,200 +116,240 @@ export default function ActiveAssessments() {
       const sevenDaysFromNow = new Date();
       sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
       return (
-        matchesSearch && new Date(assessment.expiresAt) <= sevenDaysFromNow
+        matchesSearch && new Date(assessment.createdAt) <= sevenDaysFromNow
       );
     }
     return matchesSearch;
   });
 
+  // Get status badge
+  const getStatusBadge = (status: Assessment['status']) => {
+    switch (status) {
+      case 'PENDING':
+        return (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 hover:bg-yellow-50 border-yellow-200">
+            <Hourglass className="h-3 w-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      case 'IN_PROGRESS':
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">
+            <Clock className="h-3 w-3 mr-1" />
+            In Progress
+          </Badge>
+        );
+      case 'COMPLETED':
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50 border-green-200">
+            <CircleCheck className="h-3 w-3 mr-1" />
+            Completed
+          </Badge>
+        );
+      case 'REVIEWED':
+        return (
+          <Badge variant="outline" className="bg-purple-50 text-purple-700 hover:bg-purple-50 border-purple-200">
+            <CircleCheck className="h-3 w-3 mr-1" />
+            Reviewed
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
+
+  // Copy assessment link to clipboard
+  const copyAssessmentLink = (uniqueLink: string) => {
+    const link = `${window.location.origin}/assessments/${uniqueLink}`;
+    void navigator.clipboard.writeText(link);
+  };
+
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">Active Assessments</h1>
-        <p className="text-muted-foreground">
-          Monitor and manage your ongoing candidate assessments
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8 px-4 max-w-[1200px] space-y-8">
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">Active Assessments</h1>
+          <p className="text-muted-foreground text-lg">
+            Monitor and manage your ongoing candidate assessments
+          </p>
+        </div>
 
-      <Card className="mb-6">
-        <CardHeader className="pb-3">
-          <CardTitle>Search & Filter</CardTitle>
-          <CardDescription>
-            Find assessments by title or description
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="relative">
-              <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
-              <Input
-                placeholder="Search assessments..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center space-x-2">
+              <Search className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-xl">Search & Filter</CardTitle>
             </div>
+            <CardDescription className="text-sm">
+              Find assessments by title, description, or candidate information
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search assessments..."
+                  className="pl-10 w-full bg-background"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
 
-            <div className="flex items-center gap-2">
-              <Filter className="text-muted-foreground h-4 w-4" />
-              <span className="text-muted-foreground text-sm">
-                Status: Active
-              </span>
+              <div className="flex items-center space-x-3 bg-muted/30 rounded-lg px-4 py-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Status: Active</span>
+              </div>
+
+              <div className="flex justify-end">
+                <Button asChild size="lg" className="w-full md:w-auto">
+                  <Link href="/app/assessments/create">
+                    <PlusCircle className="h-5 w-5 mr-2" />
+                    Create Assessment
+                  </Link>
+                </Button>
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="flex justify-end">
-              <Button>Create Assessment</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <div className="space-y-6">
+          <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+              <TabsTrigger value="all">All Active</TabsTrigger>
+              <TabsTrigger value="recent">Recently Created</TabsTrigger>
+              <TabsTrigger value="expiring">Expiring Soon</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-      <Tabs value={tabValue} onValueChange={setTabValue} className="mb-6">
-        <TabsList>
-          <TabsTrigger value="all">All Active</TabsTrigger>
-          <TabsTrigger value="recent">Recently Created</TabsTrigger>
-          <TabsTrigger value="expiring">Expiring Soon</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {filteredAssessments.length > 0 ? (
-          filteredAssessments.map((assessment) => (
-            <Card key={assessment.id} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-xl">
-                      {assessment.title}
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      {assessment.description}
-                    </CardDescription>
-                  </div>
-                  <CustomBadge variant="secondary" className="ml-2">
-                    {assessment.status === "IN_PROGRESS"
-                      ? "In Progress"
-                      : assessment.status}
-                  </CustomBadge>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-4 pb-0">
-                <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-                  <div className="flex flex-col items-center">
-                    <Users className="text-muted-foreground mb-1 h-5 w-5" />
-                    <div className="text-xl font-semibold">
-                      {assessment.candidatesCompleted}/
-                      {assessment.candidatesTotal}
-                    </div>
-                    <div className="text-muted-foreground text-xs">
-                      Candidates
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <FileText className="text-muted-foreground mb-1 h-5 w-5" />
-                    <div className="text-xl font-semibold">
-                      {assessment.questionsCount}
-                    </div>
-                    <div className="text-muted-foreground text-xs">
-                      Questions
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <Clock className="text-muted-foreground mb-1 h-5 w-5" />
-                    <div className="text-xl font-semibold">
-                      {Math.floor(
-                        (new Date(assessment.expiresAt).getTime() -
-                          new Date().getTime()) /
-                          (1000 * 60 * 60 * 24),
-                      )}
-                    </div>
-                    <div className="text-muted-foreground text-xs">
-                      Days Left
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <BarChart className="text-muted-foreground mb-1 h-5 w-5" />
-                    <div className="text-xl font-semibold">
-                      {assessment.averageScore.toFixed(1)}%
-                    </div>
-                    <div className="text-muted-foreground text-xs">
-                      Avg. Score
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t pt-4 pb-2">
-                  <h4 className="mb-3 flex items-center gap-1 text-sm font-medium">
-                    <Award className="text-muted-foreground h-4 w-4" />
-                    Top Performing Candidates
-                  </h4>
-
-                  <div className="space-y-2">
-                    {assessment.topCandidates.map((candidate, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-7 w-7">
-                            <AvatarImage
-                              src={getAvatarUrl(candidate.email)}
-                              alt={candidate.name}
-                            />
-                            <AvatarFallback>
-                              {candidate.name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm">{candidate.name}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-sm font-medium">
-                            {candidate.score}%
-                          </span>
-                          {index === 0 && (
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+          {loading ? (
+            <Card>
+              <CardContent className="flex justify-center items-center h-64">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <p className="text-muted-foreground">Loading assessments...</p>
                 </div>
               </CardContent>
-
-              <CardFooter className="flex justify-between pt-2 pb-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="text-muted-foreground h-4 w-4" />
-                  <span className="text-muted-foreground text-xs">
-                    Created{" "}
-                    {assessment.createdAt
-                      ? new Date(assessment.createdAt).toLocaleDateString()
-                      : "N/A"}
-                  </span>
-                </div>
-
-                <Button variant="outline" size="sm" className="gap-1">
-                  View Details
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </CardFooter>
             </Card>
-          ))
-        ) : (
-          <div className="bg-muted/30 col-span-full rounded-lg py-12 text-center">
-            <BarChart className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-            <h3 className="mb-2 text-lg font-medium">
-              No active assessments found
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Create your first assessment to start evaluating candidates
-            </p>
-            <Button>Create Assessment</Button>
-          </div>
-        )}
+          ) : filteredAssessments.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
+                <div className="rounded-full bg-muted p-4">
+                  <Search className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold">No assessments found</h3>
+                <p className="text-muted-foreground text-center max-w-sm">
+                  Try adjusting your search or filter criteria to find what you&apos;re looking for
+                </p>
+                <Button asChild size="lg" className="mt-4">
+                  <Link href="/app/assessments/create">Create New Assessment</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="overflow-hidden rounded-lg border bg-card">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-muted/50">
+                      <TableHead className="font-semibold w-[30%]">Assessment</TableHead>
+                      <TableHead className="font-semibold w-[15%]">Status</TableHead>
+                      <TableHead className="font-semibold w-[15%]">Created</TableHead>
+                      <TableHead className="font-semibold w-[20%]">Candidate</TableHead>
+                      <TableHead className="font-semibold w-[10%]">Responses</TableHead>
+                      <TableHead className="text-right font-semibold w-[10%]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAssessments.map((assessment) => (
+                      <TableRow key={assessment.id} className="hover:bg-muted/50">
+                        <TableCell className="max-w-[300px]">
+                          <div className="space-y-1">
+                            <div className="font-medium truncate">{assessment.title}</div>
+                            {assessment.description && (
+                              <div className="text-sm text-muted-foreground line-clamp-2">
+                                {assessment.description}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(assessment.status)}</TableCell>
+                        <TableCell>
+                          <div className="text-sm text-muted-foreground whitespace-nowrap">
+                            {formatDate(assessment.createdAt)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1 max-w-[200px]">
+                            <div className="font-medium truncate">{assessment.candidateName}</div>
+                            <div className="text-sm text-muted-foreground truncate">
+                              {assessment.candidateEmail}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-muted/50">
+                            <span className="font-medium">{assessment.responsesReceived}</span>
+                            <span className="text-muted-foreground mx-1">/</span>
+                            <span className="font-medium">{assessment.questionCount}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyAssessmentLink(assessment.uniqueLink)}
+                              className="hover:bg-muted"
+                              title="Copy Assessment Link"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="hover:bg-muted"
+                              title="View Assessment"
+                              asChild
+                            >
+                              <Link href={`/assessments/${assessment.uniqueLink}`} target="_blank">
+                                <ExternalLink className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="hover:bg-muted"
+                              title="View Details"
+                              asChild
+                            >
+                              <Link href={`/app/assessments/${assessment.id}`}>
+                                <span className="sr-only">View Details</span>
+                                <SlidersHorizontal className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
