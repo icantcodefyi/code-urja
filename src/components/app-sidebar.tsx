@@ -1,5 +1,6 @@
+"use client"
 import type * as React from "react"
-import { GalleryVerticalEnd } from "lucide-react"
+import { Briefcase, Users, FileText, BarChart2, Settings, User, Video, ChevronDown } from "lucide-react"
 
 import {
   Sidebar,
@@ -13,162 +14,87 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "~/components/ui/sidebar"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "~/components/ui/collapsible"
+import { useState } from "react"
 
-// This is sample data.
+// This is HR Platform data
 const data = {
   navMain: [
     {
-      title: "Getting Started",
-      url: "#",
+      title: "Dashboard",
+      url: "/app",
+      icon: <BarChart2 className="size-4" />,
+      isActive: true,
+    },
+    {
+      title: "Assessments",
+      url: "/app/assessments/create",
+      icon: <FileText className="size-4" />,
       items: [
         {
-          title: "Installation",
-          url: "#",
+          title: "Create Assessment",
+          url: "/app/assessments/create",
         },
         {
-          title: "Project Structure",
-          url: "#",
+          title: "Active Assessments",
+          url: "/app/assessments/active",
+        },
+        {
+          title: "Assessment Templates",
+          url: "/app/assessments/templates",
         },
       ],
     },
     {
-      title: "Building Your Application",
-      url: "#",
-      items: [
-        {
-          title: "Routing",
-          url: "#",
-        },
-        {
-          title: "Data Fetching",
-          url: "#",
-          isActive: true,
-        },
-        {
-          title: "Rendering",
-          url: "#",
-        },
-        {
-          title: "Caching",
-          url: "#",
-        },
-        {
-          title: "Styling",
-          url: "#",
-        },
-        {
-          title: "Optimizing",
-          url: "#",
-        },
-        {
-          title: "Configuring",
-          url: "#",
-        },
-        {
-          title: "Testing",
-          url: "#",
-        },
-        {
-          title: "Authentication",
-          url: "#",
-        },
-        {
-          title: "Deploying",
-          url: "#",
-        },
-        {
-          title: "Upgrading",
-          url: "#",
-        },
-        {
-          title: "Examples",
-          url: "#",
-        },
-      ],
+      title: "Candidates",
+      url: "/app/candidates",
+      icon: <Users className="size-4" />,
     },
     {
-      title: "API Reference",
-      url: "#",
-      items: [
-        {
-          title: "Components",
-          url: "#",
-        },
-        {
-          title: "File Conventions",
-          url: "#",
-        },
-        {
-          title: "Functions",
-          url: "#",
-        },
-        {
-          title: "next.config.js Options",
-          url: "#",
-        },
-        {
-          title: "CLI",
-          url: "#",
-        },
-        {
-          title: "Edge Runtime",
-          url: "#",
-        },
-      ],
+      title: "Media Responses",
+      url: "/app/media",
+      icon: <Video className="size-4" />,
     },
     {
-      title: "Architecture",
+      title: "Jobs",
       url: "#",
-      items: [
-        {
-          title: "Accessibility",
-          url: "#",
-        },
-        {
-          title: "Fast Refresh",
-          url: "#",
-        },
-        {
-          title: "Next.js Compiler",
-          url: "#",
-        },
-        {
-          title: "Supported Browsers",
-          url: "#",
-        },
-        {
-          title: "Turbopack",
-          url: "#",
-        },
-      ],
+      icon: <Briefcase className="size-4" />,
     },
     {
-      title: "Community",
+      title: "Settings",
       url: "#",
-      items: [
-        {
-          title: "Contribution Guide",
-          url: "#",
-        },
-      ],
+      icon: <Settings className="size-4" />,
     },
   ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // State to track which menu items are open
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>({
+    "Assessments": true // Default open
+  })
+
+  // Toggle function for collapsible items
+  const toggleItem = (title: string) => {
+    setOpenItems(prev => ({
+      ...prev,
+      [title]: !prev[title]
+    }))
+  }
+
   return (
     <Sidebar variant="floating" side="right" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <GalleryVerticalEnd className="size-4" />
+              <a href="/app">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <User className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">Documentation</span>
-                  <span className="">v1.0.0</span>
+                  <span className="font-semibold">HR Platform</span>
+                  <span className="">Talent Assessment</span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -180,22 +106,44 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu className="gap-2">
             {data.navMain.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <a href={item.url} className="font-medium">
-                    {item.title}
-                  </a>
-                </SidebarMenuButton>
                 {item.items?.length ? (
-                  <SidebarMenuSub className="ml-0 border-l-0 px-1.5">
-                    {item.items.map((item) => (
-                      <SidebarMenuSubItem key={item.title}>
-                        <SidebarMenuSubButton asChild isActive={item.isActive}>
-                          <a href={item.url}>{item.title}</a>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                ) : null}
+                  <Collapsible
+                    open={openItems[item.title]}
+                    onOpenChange={() => toggleItem(item.title)}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="justify-between" isActive={item.isActive}>
+                        <div className="flex items-center gap-2">
+                          {item.icon}
+                          {item.title}
+                        </div>
+                        <ChevronDown 
+                          className={`size-4 transition-transform duration-200 ${
+                            openItems[item.title] ? "rotate-180" : ""
+                          }`} 
+                        />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub className="ml-0 border-l-0 px-1.5">
+                        {item.items.map((subItem: { title: string; url: string; isActive?: boolean }) => (
+                          <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubButton asChild isActive={subItem.isActive}>
+                              <a href={subItem.url}>{subItem.title}</a>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuButton asChild isActive={item.isActive}>
+                    <a href={item.url} className="font-medium flex items-center gap-2">
+                      {item.icon}
+                      {item.title}
+                    </a>
+                  </SidebarMenuButton>
+                )}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>

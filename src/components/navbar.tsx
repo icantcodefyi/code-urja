@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname} from "next/navigation";
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Logo } from "./logo";
 import { cn } from "~/lib/utils";
-import { ArrowRight } from "lucide-react";
+import { SharedButton } from "./shared-button";
 
 const navbarItems = [
   { name: "Home", path: "/" },
@@ -45,7 +45,7 @@ const Navbar = (): React.ReactNode => {
           ))}
         </div>
         <div className="w-1/2 flex justify-end">
-          <GetStartedButton />
+          <SharedButton />
         </div>
       </div>
       <div className="md:hidden -mt-4">
@@ -155,7 +155,7 @@ const Navbar = (): React.ReactNode => {
               ))}
             </ul>
             <div className="w-3/4 my-4">
-              <GetStartedButton />
+              <SharedButton />
             </div>
           </motion.div>
         )}
@@ -165,15 +165,3 @@ const Navbar = (): React.ReactNode => {
 };
 
 export default Navbar;
-
-const GetStartedButton = () => {
-  return (
-    <Link
-      href="/sign-up"
-      className="flex items-center justify-center w-full md:w-36 h-10 rounded-xl border border-purple-700 text-base font-semibold text-purple-600"
-    >
-      Hire Now!
-      <ArrowRight className="h-4 w-4 ml-2" />
-    </Link>
-  );
-};

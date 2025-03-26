@@ -1,22 +1,36 @@
-import Image from "next/image";
 import React from "react";
 
-const Avatar: React.FC<{ src: string; badge?: string }> = ({ src, badge }) => {
+interface AvatarProps {
+  src: string;
+  badge?: string;
+  size?: "sm" | "md" | "lg";
+}
+
+const Avatar: React.FC<AvatarProps> = ({ src, badge, size = "md" }) => {
+  // Determine dimensions based on size
+  const dimensions = {
+    sm: { avatar: 40, badge: 16 },
+    md: { avatar: 50, badge: 20 },
+    lg: { avatar: 80, badge: 24 },
+  };
+  
+  const { avatar, badge: badgeDimension } = dimensions[size];
+  
   return (
-    <div className="relative w-[50px] h-[50px]">
-      <Image
+    <div className="relative" style={{ width: `${avatar}px`, height: `${avatar}px` }}>
+      <img
         src={src}
         alt="avatar"
-        width={50}
-        height={50}
+        width={avatar}
+        height={avatar}
         className="rounded-full"
       />
       {badge && (
-        <Image
+        <img
           src={badge}
-          alt="avatar"
-          width={20}
-          height={20}
+          alt="avatar badge"
+          width={badgeDimension}
+          height={badgeDimension}
           className="absolute bottom-0 right-0"
         />
       )}

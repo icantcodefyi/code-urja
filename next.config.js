@@ -11,6 +11,9 @@ const config = {
             {
                 hostname: "images.unsplash.com",
             },
+            {
+                hostname: "api.dicebear.com",
+            },
         ],
     },
 };
