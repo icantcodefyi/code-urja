@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
     provider = "prisma-client-js"
 }
@@ -10,19 +7,6 @@ datasource db {
     url      = env("DB_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
-
-// Necessary for Next auth
 model Account {
     id                       String  @id @default(cuid())
     userId                   String
@@ -51,14 +35,16 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
+    id            String     @id @default(cuid())
     name          String?
-    email         String?   @unique
+    email         String?    @unique
     emailVerified DateTime?
     image         String?
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
+    role          Role       @default(CANDIDATE)
+    candidate     Candidate? // For candidate users
+    hrProfile     HRProfile? // For HR users
 }
 
 model VerificationToken {
@@ -67,4 +53,107 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+// New Models for the Resume Platform
+enum Role {
+    CANDIDATE
+    HR
+    ADMIN
+}
+
+model Candidate {
+    id             String             @id @default(cuid())
+    userId         String             @unique
+    user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+    resumeUrl      String? // URL to stored resume file
+    createdAt      DateTime           @default(now())
+    updatedAt      DateTime           @updatedAt
+    assessments    Assessment[]
+    videoResponses VideoResponse[]
+    audioResponses AudioResponse[]
+    analysis       CandidateAnalysis?
+}
+
+model HRProfile {
+    id          String   @id @default(cuid())
+    userId      String   @unique
+    user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    companyName String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+}
+
+model Assessment {
+    id          String           @id @default(cuid())
+    candidateId String
+    candidate   Candidate        @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+    title       String
+    description String?
+    status      AssessmentStatus @default(PENDING)
+    createdAt   DateTime         @default(now())
+    updatedAt   DateTime         @updatedAt
+    questions   Question[]
+}
+
+enum AssessmentStatus {
+    PENDING
+    IN_PROGRESS
+    COMPLETED
+    REVIEWED
+}
+
+model Question {
+    id            String         @id @default(cuid())
+    assessmentId  String
+    assessment    Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+    text          String
+    type          QuestionType
+    order         Int
+    videoResponse VideoResponse?
+    audioResponse AudioResponse?
+}
+
+enum QuestionType {
+    VIDEO
+    AUDIO
+    TEXT
+}
+
+model VideoResponse {
+    id            String    @id @default(cuid())
+    candidateId   String
+    candidate     Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+    questionId    String    @unique
+    question      Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+    videoUrl      String // URL to stored video file
+    transcription String? // AI-generated transcription
+    duration      Int // Duration in seconds
+    createdAt     DateTime  @default(now())
+}
+
+model AudioResponse {
+    id            String    @id @default(cuid())
+    candidateId   String
+    candidate     Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+    questionId    String    @unique
+    question      Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+    audioUrl      String // URL to stored audio file
+    transcription String? // AI-generated transcription
+    duration      Int // Duration in seconds
+    createdAt     DateTime  @default(now())
+}
+
+model CandidateAnalysis {
+    id              String    @id @default(cuid())
+    candidateId     String    @unique
+    candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+    overallScore    Float // Score out of 100
+    intentToJoin    Float // Percentage
+    skillScore      Float // Percentage
+    experienceScore Float // Percentage
+    strengths       String[] // Array of strengths
+    analysisJson    Json? // Detailed analysis data
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
 }
