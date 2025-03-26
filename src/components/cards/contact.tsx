@@ -59,7 +59,7 @@ const Contact = (): JSX.Element => {
         >
           <h2 className="text-2xl">People love us </h2>
           <p className="text-sm md:text-lg w-[80%] md:w-full text-center text-[#7B7B7B]">
-            Playful is loved by thousands of people across the world, be part of
+            resume.ai is loved by thousands of people across the world, be part of
             the community and join us.
           </p>
         </motion.div>

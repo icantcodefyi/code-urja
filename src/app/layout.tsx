@@ -7,7 +7,7 @@ import { SessionProvider } from "~/components/session-provider";
 export const metadata: Metadata = {
   title: "resume ai",
   description: "resume ai",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [{ rel: "icon", url: "/assets/logo.ai.png" }],
 };
 
 const geist = Geist({

@@ -16,7 +16,7 @@ const IconBoxHero: React.FC<{
         className
       )}
     >
-      <Logo className="md:h-20 md:w-20 h-10 w-10" />
+      <Logo />
     </div>
   );
 };

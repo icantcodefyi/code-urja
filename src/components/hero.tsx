@@ -2,7 +2,6 @@
 
 import React from "react";
 import { motion } from "motion/react";
-import Image from "next/image";
 import IconBoxHero from "./cards/iconBoxHero";
 import Analytics from "./cards/Analytics";
 import SocialMediaCard from "./cards/SocialMediaCard";
@@ -102,7 +101,7 @@ const Banner = () => {
       transition={transition}
       variants={variants}
     >
-      <p className="text-[10px] font-semibold md:text-base">
+      <p className="text-[10px] font-semibold md:text-base ">
         New! Record user interviews without recording bots
       </p>
     </motion.div>

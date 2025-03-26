@@ -62,8 +62,8 @@ const Footer = () => {
       <div className="flex xl:flex-row flex-col ">
         <div className="w-[740px] md:p-9 p-2">
           <div className="flex gap-1">
-            <Logo />
-            <label className="text-3xl font-semibold">Playful</label>
+            <Logo  className={'w-15 h-10'}/>
+            <label className="text-3xl font-semibold ">resume.ai</label>
           </div>
           <p className="md:text-3xl lg:text-5xl font-bold text-lg  md:leading-[54px] md:w-[700px] w-[300px] md:mt-9 mt-0">
             Record interviews. Centralise feedback automatically.
@@ -92,7 +92,7 @@ const Footer = () => {
         <div className="border-[#CCCCCC] border-dashed border-t w-full h-1 mt:mt-10 mt-32 " />
         <div className="h-20 flex justify-center items-center md:gap-10 gap-2 mb-36 md:mb-0">
           <p className="text-[#737373] font-normal md:text-lg text-xs text-nowrap">
-            © Playful Aceternity LLC
+            © resume.ai Aceternity LLC
           </p>
           <div className="flex md:gap-5 gap-3 [&>*]:md:scale-100 scale-75">
             <Link href={"https://twitter.com"}>

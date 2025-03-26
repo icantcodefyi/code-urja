@@ -16,21 +16,21 @@ const Checks = (): JSX.Element => {
         className="flex items-center gap-1"
         whileHover={{ scale: 1.05 }}
       >
-        <CheckIcon color="#25a18e" />
+        <CheckIcon color="#A855F7" />
         <p className="font-medium text-[#000303]">Interview candidates</p>
       </motion.div>
       <motion.div
         className="flex items-center gap-1"
         whileHover={{ scale: 1.05 }}
       >
-        <CheckIcon color="#25a18e" />
+        <CheckIcon color="#A855F7" />
         <p className="font-medium text-[#000303]">Find proven leads</p>
       </motion.div>
       <motion.div
         className="flex items-center gap-1"
         whileHover={{ scale: 1.05 }}
       >
-        <CheckIcon color="#25a18e" />
+        <CheckIcon color="#A855F7" />
         <p className="font-medium text-[#000303]">Filter, select, enjoy</p>
       </motion.div>
     </motion.div>
