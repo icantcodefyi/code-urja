@@ -16,9 +16,9 @@ const text = "Record interviews. Centralise feedback automatically.";
 export const Hero = () => {
   const words = text.split(" ");
   return (
-    <motion.div className="md:h-[912px] h-[710px] p-4 relative rounded-[35px] border border-[#E6E6E6] mt-5 overflow-hidden">
+    <motion.div className="relative mt-5 h-[710px] overflow-hidden rounded-[35px] border border-[#E6E6E6] p-4 md:h-[912px]">
       <div
-        className="absolute -z-20 top-0 left-0 w-full h-full"
+        className="absolute top-0 left-0 -z-20 h-full w-full"
         style={{
           backgroundImage:
             "radial-gradient(circle, #e6e6e6 1px, transparent 1px)",
@@ -26,37 +26,37 @@ export const Hero = () => {
         }}
       />
 
-      <div className="absolute -z-10 md:top-24 md:left-36 top-4 left-4 rotate-[-15.11deg]">
+      <div className="absolute top-4 left-4 -z-10 rotate-[-15.11deg] md:top-24 md:left-36">
         <IconBoxHero />
       </div>
 
-      <div className="absolute -z-10 md:bottom-80 md:right-96 bottom-64 right-11 rotate-[14deg]">
+      <div className="absolute right-11 bottom-64 -z-10 rotate-[14deg] md:right-96 md:bottom-80">
         <IconBoxHero />
       </div>
 
-      <div className="absolute -z-10 md:bottom-52 bottom-36 md:-left-5 -left-14 rotate-[12deg] hidden md:block">
-        <motion.div className="rotate-[5deg] scale-[0.9]">
+      <div className="absolute bottom-36 -left-14 -z-10 hidden rotate-[12deg] md:bottom-52 md:-left-5 md:block">
+        <motion.div className="scale-[0.9] rotate-[5deg]">
           <Analytics color="#e2e8f0" />
         </motion.div>
       </div>
 
-      <div className="absolute -z-10 md:-bottom-40 -bottom-36 md:-left-20 -left-32 rotate-[20deg]">
-        <motion.div className="rotate-[5deg] scale-[0.9]">
-          <SocialMediaCard className="md:[&>*]:scale-100 [&>*]:scale-[0.6]" />
+      <div className="absolute -bottom-36 -left-32 -z-10 rotate-[20deg] md:-bottom-40 md:-left-20">
+        <motion.div className="scale-[0.9] rotate-[5deg]">
+          <SocialMediaCard className="[&>*]:scale-[0.6] md:[&>*]:scale-100" />
         </motion.div>
       </div>
 
-      <div className="absolute -z-10 md:-bottom-16 md:right-72 -bottom-20 right-16 rotate-[-19deg]">
+      <div className="absolute right-16 -bottom-20 -z-10 rotate-[-19deg] md:right-72 md:-bottom-16">
         <Analytics color="#DFEBF3" />
       </div>
 
-      <div className="absolute -z-10 md:-bottom-36 md:-right-10 -bottom-36 -right-48 rotate-[-12deg]">
-        <PaperPinCard className="md:[&>*]:scale-100 [&>*]:scale-75" />
+      <div className="absolute -right-48 -bottom-36 -z-10 rotate-[-12deg] md:-right-10 md:-bottom-36">
+        <PaperPinCard className="[&>*]:scale-75 md:[&>*]:scale-100" />
       </div>
 
-      <motion.div className="w-full h-5/6 flex flex-col items-center justify-center">
+      <motion.div className="flex h-5/6 w-full flex-col items-center justify-center">
         <Banner />
-        <h1 className="md:text-6xl text-2xl font-bold text-center md:w-4/6 w-full mt-8">
+        <h1 className="mt-8 w-full text-center text-2xl font-bold md:w-4/6 md:text-6xl">
           {words.map((word, index) => (
             <React.Fragment key={index}>
               <motion.span
@@ -73,7 +73,7 @@ export const Hero = () => {
         <motion.p
           transition={transition}
           variants={variants}
-          className="md:text-lg text-sm font-medium leading-[23px] text-center tracking-tight max-w-2xl mx-auto w-[95%] mt-9 text-neutral-600"
+          className="mx-auto mt-9 w-[95%] max-w-2xl text-center text-sm leading-[23px] font-medium tracking-tight text-neutral-600 md:text-lg"
         >
           Record and organize user interviews automatically. Focus on what
           matters - connecting with users.
@@ -83,10 +83,10 @@ export const Hero = () => {
             transition={transition}
             variants={variants}
             style={{ boxShadow: "0px 4px 14.8px rgba(0, 0, 0, 0.2)" }}
-            className="flex items-center justify-center w-56 h-12 mt-9 rounded-xl border border-emerald-700 bg-gradient-to-b from-emerald-500 to-brand text-base font-semibold text-white"
+            className="mt-9 flex h-12 w-56 cursor-pointer items-center justify-center rounded-xl border border-purple-700 font-semibold text-purple-600"
           >
-            Get started - it&apos;s free
-            <ArrowRight className="h-4 w-4 ml-2" />
+            Hire Now! - it&apos;s free
+            <ArrowRight className="ml-2 h-4 w-4" />
           </motion.button>
         </Link>
       </motion.div>
@@ -96,23 +96,14 @@ export const Hero = () => {
 
 const Banner = () => {
   return (
-    <Link href="/blog/Artificial-Intelligence">
-      <motion.div
-        className="md:w-[459px] w-72 md:h-10 h-9 rounded-xl bg-emerald-500/50 flex items-center justify-center md:gap-3 gap-1"
-        transition={transition}
-        variants={variants}
-      >
-        <Image
-          height={20}
-          width={20}
-          src="/assets/banner_Icon.svg"
-          alt="hero_text"
-          className="size-5 md:size-6"
-        />
-        <p className="md:text-base text-[10px] font-semibold">
-          New! Record user interviews without recording bots
-        </p>
-      </motion.div>
-    </Link>
+    <motion.div
+      className="flex h-9 w-72 items-center justify-center gap-1 rounded-xl bg-purple-500/50 md:h-10 md:w-[459px] md:gap-3"
+      transition={transition}
+      variants={variants}
+    >
+      <p className="text-[10px] font-semibold md:text-base">
+        New! Record user interviews without recording bots
+      </p>
+    </motion.div>
   );
 };
