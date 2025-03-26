@@ -10,6 +10,7 @@ import PaperPinCard from "./cards/paperPin";
 import Link from "next/link";
 import { transition, variants } from "~/lib/data";
 import { ArrowRight } from "lucide-react";
+import { SharedButton } from "./shared-button";
 
 const text = "Record interviews. Centralise feedback automatically.";
 
@@ -78,17 +79,17 @@ export const Hero = () => {
           Record and organize user interviews automatically. Focus on what
           matters - connecting with users.
         </motion.p>
-        <Link href="/sign-up">
-          <motion.button
-            transition={transition}
-            variants={variants}
-            style={{ boxShadow: "0px 4px 14.8px rgba(0, 0, 0, 0.2)" }}
-            className="mt-9 flex h-12 w-56 cursor-pointer items-center justify-center rounded-xl border border-purple-700 font-semibold text-purple-600"
-          >
-            Hire Now! - it&apos;s free
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </motion.button>
-        </Link>
+        <motion.div
+          transition={transition}
+          variants={variants}
+          className="mt-9"
+        >
+          <SharedButton 
+            className="flex h-12 w-56 cursor-pointer items-center justify-center rounded-xl border border-purple-700 font-semibold text-purple-600"
+            withShadow={true}
+            text="Hire Now! - it's free"
+          />
+        </motion.div>
       </motion.div>
     </motion.div>
   );
