@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Logo } from "./logo";
 import { cn } from "~/lib/utils";
 import { ArrowRight } from "lucide-react";
+import { signIn, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 const navbarItems = [
   { name: "Home", path: "/" },
@@ -167,9 +169,25 @@ const Navbar = (): React.ReactNode => {
 export default Navbar;
 
 const GetStartedButton = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  const handleClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    
+    if (status === "authenticated") {
+      // User is logged in, redirect to app
+      router.push("/app");
+    } else {
+      // User needs to sign in
+      await signIn("google", { callbackUrl: "/app" });
+    }
+  };
+
   return (
     <Link
-      href="/sign-up"
+      href="#"
+      onClick={handleClick}
       className="flex items-center justify-center w-full md:w-36 h-10 rounded-xl border border-purple-700 text-base font-semibold text-purple-600"
     >
       Hire Now!

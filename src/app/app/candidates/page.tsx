@@ -1,17 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Progress } from "~/components/ui/progress";
+import { Pagination } from "~/components/ui/pagination"; 
 import { 
   User, Search, Filter, ArrowDownUp, MoreHorizontal, CheckCircle, 
-  XCircle, DownloadCloud, Video, AudioLines
+  XCircle, DownloadCloud, Video, AudioLines, ChevronLeft, ChevronRight, ArrowLeftRight
 } from "lucide-react";
 import { getAvatarUrlFromName } from "~/utils/avatar";
+import Link from "next/link";
+import Avatar from "~/components/ui/avatar";
 
 // Mock data for candidates
 const candidatesData = [
@@ -111,6 +113,8 @@ export default function CandidatesList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [currentPage, setCurrentPage] = useState(1);
+  const candidatesPerPage = 4;
   
   // Filter and sort candidates
   const filteredCandidates = candidatesData.filter(candidate => {
@@ -137,6 +141,25 @@ export default function CandidatesList() {
       return a.score - b.score;
     }
   });
+
+  // Calculate pagination
+  const indexOfLastCandidate = currentPage * candidatesPerPage;
+  const indexOfFirstCandidate = indexOfLastCandidate - candidatesPerPage;
+  const currentCandidates = filteredCandidates.slice(indexOfFirstCandidate, indexOfLastCandidate);
+  const totalPages = Math.ceil(filteredCandidates.length / candidatesPerPage);
+
+  // Navigation handlers
+  const goToNextPage = () => {
+    setCurrentPage(prevPage => 
+      prevPage === totalPages ? prevPage : prevPage + 1
+    );
+  };
+
+  const goToPrevPage = () => {
+    setCurrentPage(prevPage => 
+      prevPage === 1 ? prevPage : prevPage - 1
+    );
+  };
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -219,29 +242,28 @@ export default function CandidatesList() {
         </div>
         
         <div className="divide-y">
-          {filteredCandidates.map((candidate) => (
+          {currentCandidates.map((candidate) => (
             <div key={candidate.id} className="p-3 bg-card hover:bg-muted/20 transition-colors">
               <div className="grid grid-cols-12 gap-3 items-center">
                 <div className="col-span-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full overflow-hidden">
-                      <Image 
-                        src={getAvatarUrlFromName(candidate.id, candidate.firstName, candidate.lastName)}
-                        alt={`${candidate.firstName} ${candidate.lastName}`}
-                        width={40}
-                        height={40}
-                      />
-                    </div>
+                    <Avatar 
+                      src={getAvatarUrlFromName(candidate.id, candidate.firstName, candidate.lastName)} 
+                      size="sm"
+                    />
                     <div>
-                      <div className="font-medium">{candidate.firstName} {candidate.lastName}</div>
+                      <Link href={`/app/candidates/${candidate.id}`}>
+                        <div className="font-medium hover:text-primary hover:underline">{candidate.firstName} {candidate.lastName}</div>
+                      </Link>
                       <div className="text-sm text-muted-foreground">{candidate.email}</div>
+                      <div className="text-xs text-muted-foreground">{candidate.currentPosition}</div>
                     </div>
                   </div>
                 </div>
                 
                 <div className="col-span-2">
                   <div className="text-sm">{candidate.appliedPosition}</div>
-                  <div className="text-xs text-muted-foreground">Applied {new Date(candidate.appliedDate).toLocaleDateString()}</div>
+                  <div className="text-xs text-muted-foreground">Applied {new Date(candidate.appliedDate).toLocaleDateString('en-GB')}</div>
                 </div>
                 
                 <div className="col-span-1 text-center">
@@ -250,9 +272,9 @@ export default function CandidatesList() {
                       <span className={`text-sm font-medium ${candidate.score >= 80 ? 'text-green-600' : candidate.score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
                         {candidate.score}%
                       </span>
-                      <Progress 
-                        value={candidate.score} 
-                        className={`h-1.5 w-12 ${candidate.score >= 80 ? 'bg-green-100' : candidate.score >= 60 ? 'bg-yellow-100' : 'bg-red-100'}`} 
+                      <Progress
+                        value={candidate.score}
+                        className="h-1 w-12"
                       />
                     </div>
                   ) : (
@@ -261,7 +283,9 @@ export default function CandidatesList() {
                 </div>
                 
                 <div className="col-span-2 text-center">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(candidate.status)}`}>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(candidate.status)}`}>
+                    {candidate.status === 'Shortlisted' && <CheckCircle className="mr-1 h-3 w-3" />}
+                    {candidate.status === 'Rejected' && <XCircle className="mr-1 h-3 w-3" />}
                     {candidate.status}
                   </span>
                 </div>
@@ -269,82 +293,68 @@ export default function CandidatesList() {
                 <div className="col-span-1">
                   <div className="flex items-center gap-1">
                     {candidate.hasVideo && (
-                      <span className="p-1 rounded-full bg-primary/10" title="Has video response">
-                        <Video className="h-3 w-3 text-primary" />
-                      </span>
+                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Video className="h-3 w-3 text-blue-600" />
+                      </div>
                     )}
                     {candidate.hasAudio && (
-                      <span className="p-1 rounded-full bg-primary/10" title="Has audio response">
-                        <AudioLines className="h-3 w-3 text-primary" />
-                      </span>
+                      <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
+                        <AudioLines className="h-3 w-3 text-purple-600" />
+                      </div>
                     )}
                   </div>
                 </div>
                 
-                <div className="col-span-2 flex items-center justify-end gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    asChild
-                  >
-                    <a href={`/app/candidates/${candidate.id}`}>
+                <div className="col-span-2 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Link href={`/app/candidates/${candidate.id}`}>
+                      <Button size="sm" variant="outline">
+                        View
+                      </Button>
+                    </Link>
+                    <Button size="icon" variant="ghost">
                       <MoreHorizontal className="h-4 w-4" />
-                    </a>
-                  </Button>
-                  
-                  {candidate.status === 'Reviewed' && (
-                    <>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-green-600"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-red-600"
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                  >
-                    <DownloadCloud className="h-4 w-4" />
-                  </Button>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
-          
-          {filteredCandidates.length === 0 && (
-            <div className="p-8 text-center">
-              <div className="text-muted-foreground">No candidates found matching your criteria</div>
-              <Button 
-                variant="link" 
-                className="mt-2"
-                onClick={() => {
-                  setSearchQuery('');
-                  setStatusFilter('All');
-                }}
-              >
-                Clear filters
-              </Button>
-            </div>
-          )}
         </div>
       </div>
       
-      <div className="mt-4 text-sm text-muted-foreground">
-        Showing {filteredCandidates.length} of {candidatesData.length} candidates
+      {/* Pagination and navigation */}
+      <div className="mt-6 flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Showing {indexOfFirstCandidate + 1} to {Math.min(indexOfLastCandidate, filteredCandidates.length)} of {filteredCandidates.length} candidates
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={goToPrevPage} 
+            disabled={currentPage === 1}
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <span className="text-sm font-medium mx-2">
+            Page {currentPage} of {totalPages}
+          </span>
+          
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={goToNextPage} 
+            disabled={currentPage === totalPages}
+            aria-label="Next page"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
-} 
+}

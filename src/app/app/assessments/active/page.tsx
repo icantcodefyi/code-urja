@@ -259,7 +259,7 @@ export default function ActiveAssessments() {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">
-                    Created {new Date(assessment.createdAt).toLocaleDateString()}
+                    Created {assessment.createdAt ? new Date(assessment.createdAt).toISOString().split('T')[0].replace(/-/g, '/') : 'N/A'}
                   </span>
                 </div>
                 

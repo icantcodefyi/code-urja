@@ -174,7 +174,7 @@ export default function AssessmentTemplates() {
                   <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-3">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      <span>Created {new Date(template.createdAt).toLocaleDateString()}</span>
+                      <span>Created {new Date(template.createdAt).toISOString().split('T')[0]}</span>
                     </div>
                     
                     <div className="flex items-center gap-1">
