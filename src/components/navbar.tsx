@@ -27,7 +27,7 @@ const Navbar = (): React.ReactNode => {
     <motion.div className="relative w-full flex justify-between items-center">
       <Link href="/" className="flex gap-3 mb-4 md:mb-0 w-1/3 cursor-pointer">
         <Logo />
-        <label className="text-3xl font-semibold tracking-tight">Playful</label>
+        <label className="text-2xl font-semibold tracking-tight">Resume AI</label>
       </Link>
       <div className="md:flex hidden justify-between w-2/3 ">
         <div className="flex justify-center w-1/2 gap-2 md:gap-9 text-lg mb-4 md:mb-0">

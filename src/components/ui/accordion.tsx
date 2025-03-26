@@ -36,7 +36,7 @@ const AccordionTrigger = React.forwardRef<
       {...props}
     >
       {!disabledIcon && (
-        <span className="mr-4 shrink-0 transition-transform duration-200 text-[#3C82F6]">
+        <span className="mr-4 shrink-0 transition-transform duration-200 text-[#7249AD]">
           +
         </span>
       )}

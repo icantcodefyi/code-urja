@@ -92,7 +92,7 @@ const Footer = () => {
         <div className="border-[#CCCCCC] border-dashed border-t w-full h-1 mt:mt-10 mt-32 " />
         <div className="h-20 flex justify-center items-center md:gap-10 gap-2 mb-36 md:mb-0">
           <p className="text-[#737373] font-normal md:text-lg text-xs text-nowrap">
-            © Playful Aceternity LLC
+            © Resume AI ~ Genshin Impact
           </p>
           <div className="flex md:gap-5 gap-3 [&>*]:md:scale-100 scale-75">
             <Link href={"https://twitter.com"}>

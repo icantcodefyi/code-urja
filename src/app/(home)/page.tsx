@@ -1,4 +1,3 @@
-import Contact from "~/components/cards/contact";
 import FeaturesCards from "~/components/cards/FeaturesCards";
 import ProductPreview from "~/components/cards/ProductPreview";
 import FAQSection from "~/components/faq";
@@ -23,7 +22,6 @@ export default function Home() {
 
       <Grids />
       <FAQSection />
-      <Contact />
     </div>
   );
 }
