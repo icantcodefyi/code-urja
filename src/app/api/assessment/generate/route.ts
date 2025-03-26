@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { NextResponse } from 'next/server';
 import { generateAssessment } from '~/server/openai/assessment';
 import { z } from 'zod';

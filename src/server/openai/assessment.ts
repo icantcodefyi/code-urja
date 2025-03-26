@@ -13,7 +13,7 @@ const AssessmentGenerationSchema = z.object({
       text: z.string(),
       type: z.nativeEnum(QuestionType),
       order: z.number(),
-      expectedDuration: z.number().optional(), // in seconds
+      expectedDuration: z.number().nullable(), // Changed from optional to nullable
       difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
       category: z.string(),
       skills: z.array(z.string()),
@@ -53,7 +53,7 @@ Please create a well-structured assessment that includes:
 5. Set reasonable time limits and passing criteria`;
 
   const result = await generateObject({
-    model: openai('gpt-4-0125-preview', {
+    model: openai('gpt-4o-2024-08-06', {
       structuredOutputs: true,
     }),
     schemaName: 'assessment',
