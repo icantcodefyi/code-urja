@@ -62,11 +62,16 @@ const Footer = () => {
       <div className="flex xl:flex-row flex-col ">
         <div className="w-[740px] md:p-9 p-2">
           <div className="flex gap-1">
+<<<<<<< Updated upstream
             <Logo  className={'w-15 h-10'}/>
             <label className="text-3xl font-semibold ">resume.ai</label>
+=======
+            <Logo />
+            <label className="text-3xl font-semibold">resume.ai</label>
+>>>>>>> Stashed changes
           </div>
           <p className="md:text-3xl lg:text-5xl font-bold text-lg  md:leading-[54px] md:w-[700px] w-[300px] md:mt-9 mt-0">
-            Record interviews. Centralise feedback automatically.
+            Use and Transfer Your Interview Data with AI
           </p>
         </div>
         <div className="flex items-center xl:justify-end justify-start w-full md:px-10 xl:px-0">

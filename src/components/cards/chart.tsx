@@ -4,7 +4,7 @@ import React from "react";
 import { ContentCard } from "./ContentCard";
 import { graphData } from "~/lib/data";
 
-const ChartCard = (): JSX.Element => {
+const ChartCard = () => {
   return (
     <div className="relative lg:h-[483px] h-full lg:w-3/5 w-full flex flex-col items-center rounded-2xl overflow-hidden p-5 pt-20 border border-[#DBDCDF]">
       <div>
@@ -17,8 +17,8 @@ const ChartCard = (): JSX.Element => {
 
       <Chart />
       <ContentCard
-        title="Rank interviee, effortlessly"
-        description="State of the art bar chart depiction of interviee's performance"
+        title="Performance Analytics"
+        description="Visualize interview performance metrics with advanced data analytics"
         className="mt-4"
       />
     </div>
@@ -27,7 +27,7 @@ const ChartCard = (): JSX.Element => {
 
 export default ChartCard;
 
-const Chart = (): JSX.Element => {
+const Chart = () => {
   return (
     <div>
       <div className="relative lg:w-[532px] h-[275px] lg:[&>*]:scale-[0.8] [&>*]:scale-[0.6] bg-[#FFFFFF] rounded-3xl overflow-hidden border border-solid border-[#EFEFEF]">

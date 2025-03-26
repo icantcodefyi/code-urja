@@ -47,8 +47,8 @@ const Grids = () => {
               </div>
             </div>
             <ContentCard
-              title="Easy resume upload"
-              description="Simple way to track user's resume and relevant scores"
+              title="Smart Resume Analysis"
+              description="AI-powered resume screening and candidate scoring in seconds"
               className="mt-24 "
             />
           </div>
@@ -68,7 +68,7 @@ const Grids = () => {
                 {[
                   {
                     avatar: 1,
-                    name: "Manu's Girlfriend",
+                    name: "Tanishka Bhagat",
                     description: "Doesn't exist, fake profile.",
                     src: "/assets/avatar/avatar1.png",
                   },
@@ -105,8 +105,8 @@ const Grids = () => {
                 ))}
               </div>
               <ContentCard
-                title="Track interview feedback"
-                description="All the features of product feedback tool you need to easily centralize product"
+                title="AI Interview Insights"
+                description="Get real-time analysis and structured feedback from every interview automatically"
                 className="mt-8"
               />
             </div>
@@ -146,8 +146,8 @@ const Grids = () => {
               />
             </div>
             <ContentCard
-              title="Easy social media integration"
-              description="Go from nothing to social media success stories."
+              title="Seamless Social Integration"
+              description="Share interview insights and job opportunities across all your social channels"
               className="mt-72"
             />
           </div>

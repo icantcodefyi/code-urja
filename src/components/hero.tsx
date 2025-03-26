@@ -6,12 +6,10 @@ import IconBoxHero from "./cards/iconBoxHero";
 import Analytics from "./cards/Analytics";
 import SocialMediaCard from "./cards/SocialMediaCard";
 import PaperPinCard from "./cards/paperPin";
-import Link from "next/link";
 import { transition, variants } from "~/lib/data";
-import { ArrowRight } from "lucide-react";
 import { SharedButton } from "./shared-button";
 
-const text = "Record interviews. Centralise feedback automatically.";
+const text = "Use and Transfer Your Interview Data with AI";
 
 export const Hero = () => {
   const words = text.split(" ");
@@ -75,8 +73,7 @@ export const Hero = () => {
           variants={variants}
           className="mx-auto mt-9 w-[95%] max-w-2xl text-center text-sm leading-[23px] font-medium tracking-tight text-neutral-600 md:text-lg"
         >
-          Record and organize user interviews automatically. Focus on what
-          matters - connecting with users.
+          Let AI handle your interview documentation while you focus on what matters most—building meaningful connections with candidates.
         </motion.p>
         <motion.div
           transition={transition}
@@ -86,7 +83,7 @@ export const Hero = () => {
           <SharedButton 
             className="flex h-12 w-56 cursor-pointer items-center justify-center rounded-xl border border-purple-700 font-semibold text-purple-600"
             withShadow={true}
-            text="Hire Now! - it's free"
+            text="Get Started - It's Free"
           />
         </motion.div>
       </motion.div>
@@ -101,8 +98,13 @@ const Banner = () => {
       transition={transition}
       variants={variants}
     >
+<<<<<<< Updated upstream
       <p className="text-[10px] font-semibold md:text-base ">
         New! Record user interviews without recording bots
+=======
+      <p className="text-[10px] font-semibold md:text-base">
+        New! AI-powered interview transcription and analysis
+>>>>>>> Stashed changes
       </p>
     </motion.div>
   );

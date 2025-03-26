@@ -14,7 +14,7 @@ interface SharedButtonProps {
 
 export const SharedButton = ({
   className = "flex items-center justify-center w-full md:w-36 h-10 rounded-xl border border-purple-700 text-base font-semibold text-purple-600",
-  text = "Hire Now!",
+  text = "Get Started",
   withShadow = false,
 }: SharedButtonProps) => {
   const { data: session, status } = useSession();

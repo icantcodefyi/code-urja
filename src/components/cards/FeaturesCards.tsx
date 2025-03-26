@@ -1,24 +1,25 @@
 "use client";
 
 import React from "react";
+import type { JSX } from "react";
 import { CloudIcon, ProfileSearch, SymbolsSpeed } from "../icons";
 import { motion } from "motion/react";
 
-const FeaturesCards = (): JSX.Element => {
+const FeaturesCards = () => {
   const features = [
     {
       title:
-        "Centralise system to search for candidates, easy access to the entire database.",
+        "Unified candidate database with powerful AI search to find the perfect match instantly.",
       icon: <ProfileSearch />,
     },
     {
       title:
-        "Accelerated speed to shortlist candidates, make notes as you scan and decide later.",
+        "Smart candidate evaluation with AI-assisted note-taking and automated insights generation.",
       icon: <SymbolsSpeed />,
     },
     {
       title:
-        "Data is backed up every 2 seconds so that you never lose a single candidate ever again.",
+        "Secure cloud storage with real-time sync ensures your interview data is always protected.",
       icon: <CloudIcon />,
     },
   ];

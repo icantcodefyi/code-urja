@@ -5,7 +5,7 @@ import React from "react";
 import BookACall from "../BookACall";
 import { motion } from "motion/react";
 
-const Contact = (): JSX.Element => {
+const Contact = () => {
   return (
     <div className="w-full flex items-center justify-center py-16 mt-24">
       <div className="flex flex-col items-center justify-center w-[430px] space-y-4">

@@ -18,12 +18,10 @@ const Features = ({ className }: { className?: string }) => {
     >
       <Badge>Features</Badge>
       <h1 className="md:text-4xl font-semibold mb-2 lg:text-5xl text-2xl">
-        Go from question to hired
+        From Interview to Insights
       </h1>
       <p className="text-center w-72 md:w-[670px] md:text-base lg:text-lg text-sm px-1">
-        All the features you need to evaluate technical candidates effectively,
-        track hiring pipelines, and find your next star engineer - all in one
-        place.
+        All the features you need to evaluate technical candidates effectively, track hiring pipelines, and find your next star engineer - all in one place.
       </p>
     </motion.div>
   );

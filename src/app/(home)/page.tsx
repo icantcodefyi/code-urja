@@ -16,9 +16,8 @@ export default function Home() {
       <ProductPreview />
       <Header
         badge="Products"
-        title="Features that will make your life easier"
-        subtitle="Streamline your hiring process with powerful tools for sourcing,
-        evaluating, and onboarding top talent - all in one platform."
+        title="Use and Transfer Your Interview Data with AI"
+        subtitle="Experience seamless interview management with AI-powered transcription, analysis, and insights - helping you make better hiring decisions."
       />
 
       <Grids />

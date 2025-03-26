@@ -7,9 +7,8 @@ export const ContentCard: React.FC<{
   description?: string;
 }> = ({
   className,
-  title = "Go from question to",
-  description = `All the features of product feedback tool you need to easily centralize
-        product`,
+  title = "From Interview to Insights",
+  description = `All the features you need to evaluate technical candidates effectively, track hiring pipelines, and find your next star engineer - all in one place.`,
 }) => {
   const words = title.split(" ");
 
