@@ -60,6 +60,12 @@ export default function CreateAssessment() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [generatedAssessment, setGeneratedAssessment] = useState<ApiResponse | null>(null);
   
+  // Handle form submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [assessmentLink, setAssessmentLink] = useState('');
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  
   // Add a new question
   const addQuestion = () => {
     const newQuestion: Question = {
@@ -162,19 +168,45 @@ export default function CreateAssessment() {
   };
   
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the data to your API
-    console.log({
-      title,
-      description,
-      maxDuration: parseInt(maxDuration),
-      passingScore: parseInt(passingScore),
-      aiAnalysisEnabled,
-      isTemplate,
-      templateName: isTemplate ? templateName : undefined,
-      questions
-    });
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      const payload = {
+        title,
+        description,
+        maxDuration: parseInt(maxDuration),
+        passingScore: parseInt(passingScore),
+        aiAnalysisEnabled,
+        isTemplate,
+        templateName: isTemplate ? templateName : undefined,
+        questions
+      };
+      
+      const response = await fetch('/api/assessments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json() as { error: string };
+        throw new Error(errorData.error ?? 'Failed to create assessment');
+      }
+      
+      const data = await response.json() as { assessment: unknown; assessmentLink: string };
+      setSubmitSuccess(true);
+      setAssessmentLink(data.assessmentLink);
+    } catch (error) {
+      console.error('Error creating assessment:', error);
+      setSubmitError(error instanceof Error ? error.message : 'An unexpected error occurred');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -410,12 +442,46 @@ export default function CreateAssessment() {
                 <Button type="button" variant="outline">
                   Save as Draft
                 </Button>
-                <Button type="submit">
-                  <Send className="h-4 w-4 mr-1" />
-                  Create Assessment
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>Loading...</>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-1" />
+                      Create Assessment
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
+            
+            {submitError && (
+              <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-md">
+                {submitError}
+              </div>
+            )}
+            
+            {submitSuccess && (
+              <div className="mt-4 p-4 border border-green-200 bg-green-50 rounded-md">
+                <h3 className="font-medium text-green-800 mb-2">Assessment Created Successfully!</h3>
+                <p className="mb-2">Share this link with candidates:</p>
+                <div className="flex items-center gap-2">
+                  <Input 
+                    value={`${window.location.origin}${assessmentLink}`} 
+                    readOnly 
+                    className="bg-white"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(`${window.location.origin}${assessmentLink}`);
+                    }}
+                  >
+                    Copy Link
+                  </Button>
+                </div>
+              </div>
+            )}
           </form>
         </TabsContent>
         
