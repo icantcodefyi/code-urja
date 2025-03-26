@@ -70,9 +70,10 @@ model Candidate {
     resumeUrl      String? // URL to stored resume file
     createdAt      DateTime           @default(now())
     updatedAt      DateTime           @updatedAt
-    assessments    Assessment[]
+    submissions    AssessmentSubmission[]
     videoResponses VideoResponse[]
     audioResponses AudioResponse[]
+    textResponses  TextResponse[]
     analysis       CandidateAnalysis?
 }
 
@@ -87,11 +88,8 @@ model HRProfile {
 
 model Assessment {
     id          String           @id @default(cuid())
-    candidateId String
-    candidate   Candidate        @relation(fields: [candidateId], references: [id], onDelete: Cascade)
     title       String
     description String?
-    status      AssessmentStatus @default(PENDING)
     createdAt   DateTime         @default(now())
     updatedAt   DateTime         @updatedAt
     questions   Question[]
@@ -103,6 +101,7 @@ model Assessment {
     maxDuration Int?            // Maximum duration in minutes for the assessment
     passingScore Float?         // Minimum score required to pass
     aiAnalysisEnabled Boolean   @default(true) // Whether AI analysis is enabled for this assessment
+    submissions AssessmentSubmission[]  // Link to assessment submissions from candidates
 }
 
 enum AssessmentStatus {
@@ -119,8 +118,9 @@ model Question {
     text          String
     type          QuestionType
     order         Int
-    videoResponse VideoResponse?
-    audioResponse AudioResponse?
+    videoResponses VideoResponse[]
+    audioResponses AudioResponse[]
+    textResponses  TextResponse[]
 }
 
 enum QuestionType {
@@ -130,27 +130,49 @@ enum QuestionType {
 }
 
 model VideoResponse {
-    id            String    @id @default(cuid())
-    candidateId   String
-    candidate     Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-    questionId    String    @unique
-    question      Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-    videoUrl      String // URL to stored video file
-    transcription String? // AI-generated transcription
-    duration      Int // Duration in seconds
-    createdAt     DateTime  @default(now())
+    id                  String               @id @default(cuid())
+    candidateId         String
+    candidate           Candidate            @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+    questionId          String    
+    question            Question             @relation(fields: [questionId], references: [id], onDelete: Cascade)
+    submissionId        String
+    submission          AssessmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+    videoUrl            String // URL to stored video file
+    transcription       String? // AI-generated transcription
+    duration            Int // Duration in seconds
+    createdAt           DateTime             @default(now())
+    
+    @@unique([questionId, submissionId])
 }
 
 model AudioResponse {
-    id            String    @id @default(cuid())
-    candidateId   String
-    candidate     Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-    questionId    String    @unique
-    question      Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-    audioUrl      String // URL to stored audio file
-    transcription String? // AI-generated transcription
-    duration      Int // Duration in seconds
-    createdAt     DateTime  @default(now())
+    id                  String               @id @default(cuid())
+    candidateId         String
+    candidate           Candidate            @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+    questionId          String    
+    question            Question             @relation(fields: [questionId], references: [id], onDelete: Cascade)
+    submissionId        String
+    submission          AssessmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+    audioUrl            String // URL to stored audio file
+    transcription       String? // AI-generated transcription
+    duration            Int // Duration in seconds
+    createdAt           DateTime             @default(now())
+    
+    @@unique([questionId, submissionId])
+}
+
+model TextResponse {
+    id                  String               @id @default(cuid())
+    candidateId         String
+    candidate           Candidate            @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+    questionId          String    
+    question            Question             @relation(fields: [questionId], references: [id], onDelete: Cascade)
+    submissionId        String
+    submission          AssessmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+    content             String // Text content of the response
+    createdAt           DateTime             @default(now())
+    
+    @@unique([questionId, submissionId])
 }
 
 model CandidateAnalysis {
@@ -165,4 +187,22 @@ model CandidateAnalysis {
     analysisJson    Json? // Detailed analysis data
     createdAt       DateTime  @default(now())
     updatedAt       DateTime  @updatedAt
+}
+
+// New model to track individual submissions
+model AssessmentSubmission {
+    id            String           @id @default(cuid())
+    assessmentId  String
+    assessment    Assessment       @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+    candidateId   String
+    candidate     Candidate        @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+    status        AssessmentStatus @default(PENDING)
+    startedAt     DateTime         @default(now())
+    completedAt   DateTime?
+    videoResponses VideoResponse[]
+    audioResponses AudioResponse[]
+    textResponses  TextResponse[]
+    
+    @@unique([assessmentId, candidateId])
+    @@map("assessment_submission") // Add explicit table name for Prisma
 }

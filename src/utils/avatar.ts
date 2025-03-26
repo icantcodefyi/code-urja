@@ -36,7 +36,18 @@ export const getAvatarUrlFromEmail = (email: string): string => {
  * @param lastName Last name
  * @returns URL to the DiceBear avatar
  */
-export const getAvatarUrlFromName = (id: string, firstName: string, lastName: string): string => {
-  // Use the candidate's id and name as seed for consistency
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}-${firstName.toLowerCase()}-${lastName.toLowerCase()}`;
+export const getAvatarUrlFromName = (idOrFullName: string, firstName?: string, lastName?: string): string => {
+  // If only one parameter is provided, assume it's the full name
+  if (firstName === undefined && lastName === undefined) {
+    const fullName = idOrFullName;
+    const nameParts = fullName.split(' ');
+    const first = nameParts[0] ?? '';
+    const last = nameParts.slice(1).join(' ') ?? '';
+    
+    // Use the full name as seed
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${fullName.toLowerCase()}`;
+  }
+  
+  // Original functionality: use the candidate's id and name as seed for consistency
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${idOrFullName}-${firstName!.toLowerCase()}-${lastName!.toLowerCase()}`;
 }; 

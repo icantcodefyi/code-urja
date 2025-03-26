@@ -14,6 +14,18 @@ interface DashboardStats {
   pendingResponses: number;
 }
 
+interface Assessment {
+  id: string;
+  title: string;
+  status: string;
+  candidatesInvited: number;
+  responsesReceived: number;
+}
+
+interface AssessmentsResponse {
+  assessments: Assessment[];
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalAssessments: 0,
@@ -22,6 +34,7 @@ export default function DashboardPage() {
     totalCandidates: 0,
     pendingResponses: 0
   });
+  const [recentAssessments, setRecentAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -30,37 +43,84 @@ export default function DashboardPage() {
         const response = await fetch('/api/dashboard/stats');
         
         if (response.ok) {
-          const data = await response.json();
+          const data = await response.json() as DashboardStats;
           setStats(data);
+        } else {
+          console.error('Failed to fetch dashboard stats:', await response.text());
         }
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
+      }
+    };
+    
+    const fetchRecentAssessments = async () => {
+      try {
+        const response = await fetch('/api/assessments/recent');
+        
+        if (response.ok) {
+          const data = await response.json() as AssessmentsResponse;
+          setRecentAssessments(data.assessments);
+        } else {
+          // Use placeholder data if the API fails or doesn't exist yet
+          setRecentAssessments([
+            {
+              id: "1",
+              title: "Frontend Developer Skills Assessment",
+              status: "IN_PROGRESS",
+              candidatesInvited: 5,
+              responsesReceived: 3
+            },
+            {
+              id: "2",
+              title: "Product Manager Interview",
+              status: "PENDING",
+              candidatesInvited: 2,
+              responsesReceived: 0
+            },
+            {
+              id: "3",
+              title: "UX Designer Technical Assessment",
+              status: "COMPLETED",
+              candidatesInvited: 3,
+              responsesReceived: 3
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching recent assessments:', error);
       } finally {
         setLoading(false);
       }
     };
     
     void fetchStats();
+    void fetchRecentAssessments();
   }, []);
   
-  // For demo purposes, simulate some data if the API isn't ready yet
-  useEffect(() => {
-    if (loading) {
-      // Simulate API response after 1 second for demo
-      const timer = setTimeout(() => {
-        setStats({
-          totalAssessments: 8,
-          activeAssessments: 5,
-          completedAssessments: 3,
-          totalCandidates: 12,
-          pendingResponses: 7
-        });
-        setLoading(false);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'COMPLETED':
+      case 'REVIEWED':
+        return {
+          label: 'Completed',
+          icon: <CircleCheck className="h-3 w-3" />,
+          className: 'bg-green-100 text-green-700'
+        };
+      case 'IN_PROGRESS':
+        return {
+          label: 'In Progress',
+          icon: <Clock className="h-3 w-3" />,
+          className: 'bg-primary/10 text-primary'
+        };
+      case 'PENDING':
+      default:
+        return {
+          label: 'Pending',
+          icon: <Hourglass className="h-3 w-3" />,
+          className: 'bg-primary/10 text-primary'
+        };
     }
-  }, [loading]);
+  };
   
   return (
     <div className="p-6">
@@ -137,65 +197,30 @@ export default function DashboardPage() {
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Recent Assessments</h2>
         <div className="space-y-4">
-          <Card>
-            <CardHeader className="py-4">
-              <div className="flex justify-between items-center">
-                <CardTitle>Frontend Developer Skills Assessment</CardTitle>
-                <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
-                  <Clock className="h-3 w-3" />
-                  <span>In Progress</span>
-                </div>
-              </div>
-              <CardDescription>
-                5 candidates invited • 3 responses received
-              </CardDescription>
-            </CardHeader>
-            <CardFooter className="py-3 border-t">
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/app/assessments/active">View Details</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card>
-            <CardHeader className="py-4">
-              <div className="flex justify-between items-center">
-                <CardTitle>Product Manager Interview</CardTitle>
-                <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
-                  <Hourglass className="h-3 w-3" />
-                  <span>Pending</span>
-                </div>
-              </div>
-              <CardDescription>
-                2 candidates invited • 0 responses received
-              </CardDescription>
-            </CardHeader>
-            <CardFooter className="py-3 border-t">
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/app/assessments/active">View Details</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card>
-            <CardHeader className="py-4">
-              <div className="flex justify-between items-center">
-                <CardTitle>UX Designer Technical Assessment</CardTitle>
-                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                  <CircleCheck className="h-3 w-3" />
-                  <span>Completed</span>
-                </div>
-              </div>
-              <CardDescription>
-                3 candidates invited • 3 responses received
-              </CardDescription>
-            </CardHeader>
-            <CardFooter className="py-3 border-t">
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/app/assessments/active">View Details</Link>
-              </Button>
-            </CardFooter>
-          </Card>
+          {recentAssessments.map(assessment => {
+            const status = getStatusDisplay(assessment.status);
+            return (
+              <Card key={assessment.id}>
+                <CardHeader className="py-4">
+                  <div className="flex justify-between items-center">
+                    <CardTitle>{assessment.title}</CardTitle>
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${status.className}`}>
+                      {status.icon}
+                      <span>{status.label}</span>
+                    </div>
+                  </div>
+                  <CardDescription>
+                    {assessment.candidatesInvited} candidates invited • {assessment.responsesReceived} responses received
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter className="py-3 border-t">
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href={`/app/assessments/${assessment.id}`}>View Details</Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       </div>
       

@@ -43,32 +43,6 @@ export async function POST(req: Request) {
     const data = await req.json() as CreateAssessmentPayload;
     const { title, description, maxDuration, passingScore, aiAnalysisEnabled, isTemplate, templateName, questions } = data;
     
-    // Find or create a candidate
-    let candidate = await db.candidate.findFirst({
-      where: { user: { role: 'CANDIDATE' } },
-      select: { id: true },
-    });
-    
-    // If no candidate exists, create a dummy candidate
-    if (!candidate) {
-      // First create a dummy candidate user
-      const dummyUser = await db.user.create({
-        data: {
-          name: "Dummy Candidate",
-          email: `dummy-${Date.now()}@example.com`,
-          role: 'CANDIDATE',
-        }
-      });
-      
-      // Then create a candidate profile linked to this user
-      candidate = await db.candidate.create({
-        data: {
-          userId: dummyUser.id,
-        },
-        select: { id: true },
-      });
-    }
-    
     // Generate a unique link
     const uniqueLink = nanoid(10);
     
@@ -77,15 +51,13 @@ export async function POST(req: Request) {
       data: {
         title,
         description,
-        maxDuration: parseInt(maxDuration || ""),
-        passingScore: parseFloat(passingScore || ""),
+        maxDuration: parseInt(maxDuration || "0"),
+        passingScore: parseFloat(passingScore || "0"),
         aiAnalysisEnabled,
         isTemplate: isTemplate ?? false,
         templateName: isTemplate ? templateName : null,
-        candidate: { connect: { id: candidate.id } },
-        hrUser: { connect: { id: userId } },
+        createdBy: userId, // Connect to the HR user who created it
         uniqueLink,
-        status: 'PENDING',
         questions: {
           create: questions.map((q) => ({
             text: q.text,

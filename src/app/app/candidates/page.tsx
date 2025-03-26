@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -15,97 +15,54 @@ import { getAvatarUrlFromName } from "~/utils/avatar";
 import Link from "next/link";
 import Avatar from "~/components/ui/avatar";
 
-// Mock data for candidates
-const candidatesData = [
-  {
-    id: "c123",
-    firstName: "John",
-    lastName: "Doe",
-    email: "johndoe@example.com",
-    currentPosition: "Senior Frontend Developer",
-    appliedPosition: "Lead Frontend Developer",
-    appliedDate: "2023-10-15",
-    status: "Reviewed",
-    score: 87,
-    hasVideo: true,
-    hasAudio: true,
-  },
-  {
-    id: "c124",
-    firstName: "Jane",
-    lastName: "Smith",
-    email: "janesmith@example.com",
-    currentPosition: "Full Stack Developer",
-    appliedPosition: "Lead Frontend Developer",
-    appliedDate: "2023-10-16",
-    status: "Completed",
-    score: 92,
-    hasVideo: true,
-    hasAudio: true,
-  },
-  {
-    id: "c125",
-    firstName: "Michael",
-    lastName: "Johnson",
-    email: "michaelj@example.com",
-    currentPosition: "UI/UX Designer",
-    appliedPosition: "Lead Frontend Developer",
-    appliedDate: "2023-10-17",
-    status: "In Progress",
-    score: 0,
-    hasVideo: false,
-    hasAudio: false,
-  },
-  {
-    id: "c126",
-    firstName: "Emily",
-    lastName: "Brown",
-    email: "emilyb@example.com",
-    currentPosition: "React Developer",
-    appliedPosition: "Lead Frontend Developer",
-    appliedDate: "2023-10-18",
-    status: "Shortlisted",
-    score: 95,
-    hasVideo: true,
-    hasAudio: true,
-  },
-  {
-    id: "c127",
-    firstName: "David",
-    lastName: "Wilson",
-    email: "davidw@example.com",
-    currentPosition: "Frontend Engineer",
-    appliedPosition: "Lead Frontend Developer",
-    appliedDate: "2023-10-19",
-    status: "Rejected",
-    score: 65,
-    hasVideo: true,
-    hasAudio: false,
-  },
-  {
-    id: "c128",
-    firstName: "Sarah",
-    lastName: "Miller",
-    email: "sarahm@example.com",
-    currentPosition: "JavaScript Developer",
-    appliedPosition: "Lead Frontend Developer",
-    appliedDate: "2023-10-20",
-    status: "Pending",
-    score: 0,
-    hasVideo: false,
-    hasAudio: false,
-  },
-];
+interface Candidate {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  currentPosition: string;
+  appliedPosition: string;
+  appliedDate: string;
+  status: string;
+  score: number;
+  hasVideo: boolean;
+  hasAudio: boolean;
+}
+
+interface PaginationInfo {
+  totalCandidates: number;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
+}
+
+interface CandidatesResponse {
+  candidates: Candidate[];
+  pagination: PaginationInfo;
+}
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Shortlisted': return 'bg-green-100 text-green-800';
-    case 'Rejected': return 'bg-red-100 text-red-800';
-    case 'Reviewed': return 'bg-blue-100 text-blue-800';
-    case 'Completed': return 'bg-purple-100 text-purple-800';
-    case 'In Progress': return 'bg-yellow-100 text-yellow-800';
-    case 'Pending': return 'bg-gray-100 text-gray-800';
-    default: return 'bg-gray-100 text-gray-800';
+    case 'Shortlisted':
+    case 'SHORTLISTED': 
+      return 'bg-green-100 text-green-800';
+    case 'Rejected':
+    case 'REJECTED': 
+      return 'bg-red-100 text-red-800';
+    case 'Reviewed':
+    case 'REVIEWED': 
+      return 'bg-blue-100 text-blue-800';
+    case 'Completed':
+    case 'COMPLETED': 
+      return 'bg-purple-100 text-purple-800';
+    case 'In Progress':
+    case 'IN_PROGRESS': 
+      return 'bg-yellow-100 text-yellow-800';
+    case 'Pending':
+    case 'PENDING': 
+      return 'bg-gray-100 text-gray-800';
+    default: 
+      return 'bg-gray-100 text-gray-800';
   }
 };
 
@@ -114,44 +71,52 @@ export default function CandidatesList() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortOrder, setSortOrder] = useState('newest');
   const [currentPage, setCurrentPage] = useState(1);
-  const candidatesPerPage = 4;
-  
-  // Filter and sort candidates
-  const filteredCandidates = candidatesData.filter(candidate => {
-    const matchesSearch = 
-      candidate.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      candidate.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      candidate.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      candidate.currentPosition.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'All' || candidate.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  }).sort((a, b) => {
-    const dateA = new Date(a.appliedDate).getTime();
-    const dateB = new Date(b.appliedDate).getTime();
-    
-    if (sortOrder === 'newest') {
-      return dateB - dateA;
-    } else if (sortOrder === 'oldest') {
-      return dateA - dateB;
-    } else if (sortOrder === 'highest') {
-      return b.score - a.score;
-    } else {
-      return a.score - b.score;
-    }
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    totalCandidates: 0,
+    totalPages: 0,
+    currentPage: 1,
+    limit: 10
   });
-
-  // Calculate pagination
-  const indexOfLastCandidate = currentPage * candidatesPerPage;
-  const indexOfFirstCandidate = indexOfLastCandidate - candidatesPerPage;
-  const currentCandidates = filteredCandidates.slice(indexOfFirstCandidate, indexOfLastCandidate);
-  const totalPages = Math.ceil(filteredCandidates.length / candidatesPerPage);
-
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch candidates when filters, sort, or pagination changes
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      setLoading(true);
+      
+      try {
+        // Build the query string
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('search', searchQuery);
+        if (statusFilter !== 'All') params.append('status', statusFilter);
+        params.append('sort', sortOrder);
+        params.append('page', currentPage.toString());
+        params.append('limit', pagination.limit.toString());
+        
+        const response = await fetch(`/api/candidates?${params.toString()}`);
+        
+        if (response.ok) {
+          const data = await response.json() as CandidatesResponse;
+          setCandidates(data.candidates);
+          setPagination(data.pagination);
+        } else {
+          console.error('Failed to fetch candidates:', await response.text());
+        }
+      } catch (error) {
+        console.error('Error fetching candidates:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    void fetchCandidates();
+  }, [searchQuery, statusFilter, sortOrder, currentPage, pagination.limit]);
+  
   // Navigation handlers
   const goToNextPage = () => {
     setCurrentPage(prevPage => 
-      prevPage === totalPages ? prevPage : prevPage + 1
+      prevPage === pagination.totalPages ? prevPage : prevPage + 1
     );
   };
 
@@ -196,12 +161,12 @@ export default function CandidatesList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All Statuses</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="In Progress">In Progress</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
-                  <SelectItem value="Reviewed">Reviewed</SelectItem>
-                  <SelectItem value="Shortlisted">Shortlisted</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="REVIEWED">Reviewed</SelectItem>
+                  <SelectItem value="SHORTLISTED">Shortlisted</SelectItem>
+                  <SelectItem value="REJECTED">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -242,77 +207,83 @@ export default function CandidatesList() {
         </div>
         
         <div className="divide-y">
-          {currentCandidates.map((candidate) => (
+          {loading ? (
+            <div className="p-8 text-center">Loading candidates...</div>
+          ) : candidates.length === 0 ? (
+            <div className="p-8 text-center">No candidates found. Try adjusting your filters.</div>
+          ) : candidates.map((candidate) => (
             <div key={candidate.id} className="p-3 bg-card hover:bg-muted/20 transition-colors">
               <div className="grid grid-cols-12 gap-3 items-center">
                 <div className="col-span-4">
                   <div className="flex items-center gap-3">
                     <Avatar 
-                      src={getAvatarUrlFromName(candidate.id, candidate.firstName, candidate.lastName)} 
-                      size="sm"
+                      src={getAvatarUrlFromName(`${candidate.firstName} ${candidate.lastName}`)}
+                      size="md"
                     />
                     <div>
-                      <Link href={`/app/candidates/${candidate.id}`}>
-                        <div className="font-medium hover:text-primary hover:underline">{candidate.firstName} {candidate.lastName}</div>
-                      </Link>
+                      <div className="font-medium">{candidate.firstName} {candidate.lastName}</div>
                       <div className="text-sm text-muted-foreground">{candidate.email}</div>
-                      <div className="text-xs text-muted-foreground">{candidate.currentPosition}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{candidate.currentPosition}</div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="col-span-2">
-                  <div className="text-sm">{candidate.appliedPosition}</div>
-                  <div className="text-xs text-muted-foreground">Applied {new Date(candidate.appliedDate).toLocaleDateString('en-GB')}</div>
-                </div>
+                <div className="col-span-2 text-sm">{candidate.appliedPosition}</div>
                 
                 <div className="col-span-1 text-center">
-                  {candidate.score > 0 ? (
-                    <div className="inline-flex flex-col items-center">
-                      <span className={`text-sm font-medium ${candidate.score >= 80 ? 'text-green-600' : candidate.score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
-                        {candidate.score}%
-                      </span>
-                      <Progress
+                  {candidate.status === 'PENDING' || candidate.status === 'IN_PROGRESS' ? (
+                    <span className="text-muted-foreground text-sm">N/A</span>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <span className="mb-1 text-sm font-medium">{candidate.score}/100</span>
+                      <Progress 
                         value={candidate.score}
-                        className="h-1 w-12"
+                        className={`h-1.5 w-12 ${
+                          candidate.score >= 80 ? "bg-green-100" :
+                          candidate.score >= 60 ? "bg-yellow-100" :
+                          "bg-red-100"
+                        }`}
                       />
                     </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Pending</span>
                   )}
                 </div>
                 
                 <div className="col-span-2 text-center">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(candidate.status)}`}>
-                    {candidate.status === 'Shortlisted' && <CheckCircle className="mr-1 h-3 w-3" />}
-                    {candidate.status === 'Rejected' && <XCircle className="mr-1 h-3 w-3" />}
-                    {candidate.status}
+                  <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(candidate.status)}`}>
+                    {candidate.status.replace(/_/g, ' ').toLowerCase()
+                      .replace(/\b\w/g, char => char.toUpperCase())}
                   </span>
                 </div>
                 
                 <div className="col-span-1">
-                  <div className="flex items-center gap-1">
+                  <div className="flex space-x-1">
                     {candidate.hasVideo && (
-                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Video className="h-3 w-3 text-blue-600" />
-                      </div>
+                      <Video className="h-4 w-4 text-blue-500" />
                     )}
                     {candidate.hasAudio && (
-                      <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
-                        <AudioLines className="h-3 w-3 text-purple-600" />
-                      </div>
+                      <AudioLines className="h-4 w-4 text-purple-500" />
                     )}
                   </div>
                 </div>
                 
                 <div className="col-span-2 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Link href={`/app/candidates/${candidate.id}`}>
-                      <Button size="sm" variant="outline">
-                        View
+                  <div className="flex justify-end space-x-1">
+                    <Button variant="ghost" size="icon" asChild title="View Profile">
+                      <Link href={`/app/candidates/${candidate.id}`}>
+                        <User className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    {candidate.status === 'COMPLETED' && (
+                      <Button variant="ghost" size="icon" className="text-green-600" title="Shortlist">
+                        <CheckCircle className="h-4 w-4" />
                       </Button>
-                    </Link>
-                    <Button size="icon" variant="ghost">
+                    )}
+                    {candidate.status === 'COMPLETED' && (
+                      <Button variant="ghost" size="icon" className="text-red-600" title="Reject">
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" className="text-gray-500" title="More Options">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </div>
@@ -323,38 +294,35 @@ export default function CandidatesList() {
         </div>
       </div>
       
-      {/* Pagination and navigation */}
-      <div className="mt-6 flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Showing {indexOfFirstCandidate + 1} to {Math.min(indexOfLastCandidate, filteredCandidates.length)} of {filteredCandidates.length} candidates
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={goToPrevPage} 
-            disabled={currentPage === 1}
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+      {pagination.totalPages > 1 && (
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-muted-foreground">
+            Showing <span className="font-medium">{candidates.length}</span> of <span className="font-medium">{pagination.totalCandidates}</span> candidates
+          </div>
           
-          <span className="text-sm font-medium mx-2">
-            Page {currentPage} of {totalPages}
-          </span>
-          
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={goToNextPage} 
-            disabled={currentPage === totalPages}
-            aria-label="Next page"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <Pagination>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={goToPrevPage}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+            </Button>
+            <div className="flex items-center mx-2">
+              <span className="text-sm">Page {currentPage} of {pagination.totalPages}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={goToNextPage}
+              disabled={currentPage === pagination.totalPages}
+            >
+              Next <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </Pagination>
         </div>
-      </div>
+      )}
     </div>
   );
 }

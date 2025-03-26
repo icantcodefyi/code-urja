@@ -39,6 +39,68 @@ export const ourFileRouter = {
             // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
             return { uploadedBy: metadata.userId };
         }),
+        
+    // Add support for video file uploads
+    videoUploader: f({
+        video: {
+            maxFileSize: "64MB", // Adjust based on your needs
+            maxFileCount: 1,
+        },
+    })
+        .middleware(async ({ req }) => {
+            const user = auth(req);
+            if (!user) throw new UploadThingError("Unauthorized");
+            return { userId: user.id };
+        })
+        .onUploadComplete(async ({ metadata, file }) => {
+            console.log("Video upload complete for userId:", metadata.userId);
+            console.log("Video file url", file.ufsUrl);
+            return { uploadedBy: metadata.userId, url: file.ufsUrl };
+        }),
+        
+    // Add support for audio file uploads
+    audioUploader: f({
+        audio: {
+            maxFileSize: "16MB", // Adjust based on your needs
+            maxFileCount: 1,
+        },
+    })
+        .middleware(async ({ req }) => {
+            const user = auth(req);
+            if (!user) throw new UploadThingError("Unauthorized");
+            return { userId: user.id };
+        })
+        .onUploadComplete(async ({ metadata, file }) => {
+            console.log("Audio upload complete for userId:", metadata.userId);
+            console.log("Audio file url", file.ufsUrl);
+            return { uploadedBy: metadata.userId, url: file.ufsUrl };
+        }),
+        
+    // Add support for resume file uploads
+    resumeUploader: f({
+        "application/pdf": {
+            maxFileSize: "8MB",
+            maxFileCount: 1,
+        },
+        "application/msword": {
+            maxFileSize: "8MB",
+            maxFileCount: 1,
+        },
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+            maxFileSize: "8MB",
+            maxFileCount: 1,
+        },
+    })
+        .middleware(async ({ req }) => {
+            const user = auth(req);
+            if (!user) throw new UploadThingError("Unauthorized");
+            return { userId: user.id };
+        })
+        .onUploadComplete(async ({ metadata, file }) => {
+            console.log("Resume upload complete for userId:", metadata.userId);
+            console.log("Resume file url", file.ufsUrl);
+            return { uploadedBy: metadata.userId, url: file.ufsUrl };
+        }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

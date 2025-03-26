@@ -2,7 +2,7 @@
 import React from "react"
 import { AppSidebar } from "../../components/app-sidebar"
 import { UserButton } from "../../components/user-button"
-import { BellIcon, SearchIcon } from "lucide-react"
+import { BellIcon, SearchIcon, VideoIcon, MicIcon, FileTextIcon } from "lucide-react"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
 import { usePathname } from "next/navigation"
@@ -17,6 +17,16 @@ import {
   BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu"
+import { Badge } from "~/components/ui/badgee"
 
 function DynamicBreadcrumbs() {
   const pathname = usePathname()
@@ -84,8 +94,8 @@ export default function AppLayout({
         } as React.CSSProperties
       }
     >
-      <SidebarInset className="max-w-full overflow-x-hidden">
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-b px-2 sm:px-6 bg-background overflow-hidden">
+      <SidebarInset className="max-w-full overflow-x-hidden flex flex-col h-screen">
+        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-b px-2 sm:px-6 bg-background">
           <div className="overflow-hidden min-w-0 flex-shrink">
             <DynamicBreadcrumbs />
           </div>
@@ -99,11 +109,64 @@ export default function AppLayout({
                 className="w-full pl-8 bg-background"
               />
             </div>
-            <Button variant="outline" size="icon" className="rounded-full shrink-0">
-              <BellIcon className="h-4 w-4" />
-              <span className="sr-only">Notifications</span>
-            </Button>
-            <UserButton />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="rounded-full shrink-0 relative">
+                  <BellIcon className="h-4 w-4" />
+                  <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center">
+                   <span className="text-[10px]">3</span>
+                  </Badge>
+                  <span className="sr-only">Notifications</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[350px]">
+                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="py-3">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <VideoIcon className="h-4 w-4 text-blue-500" />
+                        <span className="font-medium">New Video Cover Letter</span>
+                        <Badge variant="secondary" className="ml-auto px-2 py-1" size={"sm"} >New</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        John Smith submitted a video cover letter for Software Engineer position
+                      </p>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="py-3">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <MicIcon className="h-4 w-4 text-green-500" />
+                        <span className="font-medium">New Audio Assessment</span>
+                        <Badge variant="secondary" className="ml-auto px-2 py-1" size={"sm"} >New</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Sarah Lee completed audio assessment for Product Manager role
+                      </p>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="py-3">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <FileTextIcon className="h-4 w-4 text-purple-500" />
+                        <span className="font-medium">Candidate Analysis Ready</span>
+                        <Badge variant="secondary" className="ml-auto px-2 py-1" size={"sm"} >New</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        AI analysis completed for Michael Johnson&apos;s application with 85% match score
+                      </p>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="justify-center font-medium">
+                  View all notifications
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {/* <UserButton /> */}
             <SidebarTrigger className="rotate-180 shrink-0" />
           </div>
         </header>

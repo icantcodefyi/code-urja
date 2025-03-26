@@ -3,7 +3,7 @@ import "~/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { SessionProvider } from "~/components/session-provider";
-
+import { Toaster } from "~/components/ui/sonner";
 export const metadata: Metadata = {
   title: "resume ai",
   description: "resume ai",
@@ -21,7 +21,10 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en" className={`${geist.variable}`}>
       <body>
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          <Toaster />
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );

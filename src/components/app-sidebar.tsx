@@ -1,7 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 "use client"
 import type * as React from "react"
 import { Briefcase, Users, FileText, BarChart2, Settings, User, Video, ChevronDown } from "lucide-react"
 import { usePathname } from "next/navigation"
+import { useSession } from "next-auth/react"
 
 import {
   Sidebar,
@@ -84,6 +86,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const { data: session } = useSession()
   
   // State to track which menu items are open
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({})
@@ -131,11 +134,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <a href="/app">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <User className="size-4" />
+                {session?.user?.image ? (
+                  <img src={session.user.image} alt="User Avatar" className="size-8 rounded-lg" />
+                ) : (
+                  <User className="size-5" />
+                )}
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">HR Platform</span>
-                  <span className="">Talent Assessment</span>
+                  <span className="font-semibold">{session?.user?.name ?? "User"}</span>
+                  <span className="text-xs text-muted-foreground">{session?.user?.email ?? ""}</span>
                 </div>
               </a>
             </SidebarMenuButton>
