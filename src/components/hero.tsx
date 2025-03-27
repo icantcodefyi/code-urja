@@ -12,7 +12,7 @@ import { transition, variants } from "~/lib/data";
 import { ArrowRight } from "lucide-react";
 import { SharedButton } from "./shared-button";
 
-const text = "Record interviews. Centralise feedback automatically.";
+const text = "Hire. Quickly. Efficiently.";
 
 export const Hero = () => {
   const words = text.split(" ");
@@ -76,8 +76,7 @@ export const Hero = () => {
           variants={variants}
           className="mx-auto mt-9 w-[95%] max-w-2xl text-center text-sm leading-[23px] font-medium tracking-tight text-neutral-600 md:text-lg"
         >
-          Record and organize user interviews automatically. Focus on what
-          matters - connecting with users.
+          Automate your candidate shortlisting process and hire the best out of best.
         </motion.p>
         <motion.div
           transition={transition}

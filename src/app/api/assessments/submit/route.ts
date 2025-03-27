@@ -165,21 +165,15 @@ export async function POST(req: Request) {
         if (response.type === 'VIDEO' || response.type === 'AUDIO') {
           try {
             // Process serverUrl first if available (ensure it has https:// prefix if needed)
-            let processedServerUrl = response.serverUrl;
-            if (response.serverUrl && response.serverUrl.includes('utfs.io') && !response.serverUrl.startsWith('http')) {
-              processedServerUrl = `https://${response.serverUrl}`;
-            }
+            const mediaUrl = response.serverUrl ?? response.content;
+            console.log("mediaUrl", mediaUrl);
             
-            // Prioritize processedServerUrl if available, only fall back to content URL if necessary
-            // This fixes the issue where blob URLs were being saved instead of UploadThing URLs
-            const mediaUrl = processedServerUrl ?? response.content;
-            
-            // Check if this is a blob URL and no serverUrl is available
-            if (mediaUrl.startsWith('blob:') && !response.serverUrl) {
-              console.log(`Warning: ${response.type} URL is a blob URL which cannot be processed server-side`);
+            // Check if valid media URL is available
+            if (!mediaUrl || mediaUrl.startsWith('blob:')) {
+              console.log(`Warning: No valid ${response.type} URL available or content is a blob URL.`);
               
               // Create a placeholder transcription but still record the response
-              const placeholder = `[This ${response.type.toLowerCase()} was uploaded as a blob URL which cannot be fully processed server-side. The content was saved but not transcribed.]`;
+              const placeholder = `[This ${response.type.toLowerCase()} could not be processed. No valid URL was provided.]`;
               
               // Record the media response with placeholder
               if (response.type === 'VIDEO') {
@@ -188,7 +182,7 @@ export async function POST(req: Request) {
                   where: {
                     questionId: response.questionId,
                     submissionId: submissionId
-                  }
+                  } 
                 });
                 
                 if (existingResponse) {

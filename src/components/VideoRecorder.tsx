@@ -35,10 +35,8 @@ export default function VideoRecorder({
         const uploadedUrl = res[0].url;
         setServerUrl(uploadedUrl);
         
-        // Also update the parent with the server URL if recording is already confirmed
-        if (isConfirmed) {
-          onRecordingComplete(mediaBlobUrl ?? "", uploadedUrl);
-        }
+        // Update the parent with the server URL
+        onRecordingComplete(uploadedUrl);
         
         console.log("Video uploaded to server:", uploadedUrl);
       }
@@ -175,19 +173,20 @@ export default function VideoRecorder({
     if (mediaBlobUrl) {
       setIsConfirmed(true);
       
-      // First notify the parent about the local recording and server URL if available
-      onRecordingComplete(mediaBlobUrl, serverUrl ?? undefined);
+      if (serverUrl) {
+        // If we already have the server URL, use it as the content
+        onRecordingComplete(serverUrl);
+      } else {
+        // If no server URL yet, start upload and use local URL temporarily
+        onRecordingComplete(mediaBlobUrl);
+        // Initiate upload in the background
+        void uploadToServer(mediaBlobUrl);
+      }
       
       // Show toast notification
       toast.info("Video recorded", {
         description: "Your video will be transcribed when you submit the assessment."
       });
-      
-      // Initiate upload in the background
-      if (!serverUrl) {
-        // Only upload if not already uploaded
-        void uploadToServer(mediaBlobUrl);
-      }
     }
   };
   

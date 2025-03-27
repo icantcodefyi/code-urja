@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import Avatar from "~/components/ui/avatar";
 import { getAvatarUrlFromName } from "~/utils/avatar";
+import { Skeleton } from "~/components/ui/skeleton";
 
 interface CandidateAnalysis {
   summary: string;
@@ -107,6 +108,9 @@ export default function CandidateDetailPage() {
   console.log(candidate?.mediaResponses);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [transcribing, setTranscribing] = useState<Record<string, boolean>>({});
+  const [transcriptionErrors, setTranscriptionErrors] = useState<Record<string, string>>({});
+  const [autoTranscribeCompleted, setAutoTranscribeCompleted] = useState(false);
   
   useEffect(() => {
     const fetchCandidateDetails = async () => {
@@ -130,6 +134,129 @@ export default function CandidateDetailPage() {
     
     void fetchCandidateDetails();
   }, [candidateId]);
+  
+  // Auto-transcribe media when candidate data loads
+  useEffect(() => {
+    if (candidate && !autoTranscribeCompleted) {      
+      // Filter out videos that need transcription - either null or have error message
+      const videosNeedingTranscription = candidate.mediaResponses.video.filter(
+        item => !item.transcription || item.transcription.includes("cannot be fully processed server-side")
+      );
+      
+      // Filter out audios that need transcription - either null or have error message
+      const audiosNeedingTranscription = candidate.mediaResponses.audio.filter(
+        item => !item.transcription || item.transcription.includes("cannot be fully processed server-side")
+      );
+      
+      const transcribeAllMedia = async () => {
+        // Create a batch of promises for all transcription requests
+        const transcriptionPromises = [
+          ...videosNeedingTranscription.map(video => 
+            requestTranscription('video', video.id, video.videoUrl)
+          ),
+          ...audiosNeedingTranscription.map(audio => 
+            requestTranscription('audio', audio.id, audio.audioUrl)
+          )
+        ];
+        
+        // Execute all promises
+        if (transcriptionPromises.length > 0) {
+          await Promise.allSettled(transcriptionPromises);
+        }
+        
+        setAutoTranscribeCompleted(true);
+      };
+      
+      if (videosNeedingTranscription.length > 0 || audiosNeedingTranscription.length > 0) {
+        void transcribeAllMedia();
+      } else {
+        setAutoTranscribeCompleted(true);
+      }
+    }
+  }, [candidate, autoTranscribeCompleted]);
+  
+  // Function to request transcription for a media response
+  const requestTranscription = async (mediaType: 'video' | 'audio', mediaId: string, mediaUrl: string) => {
+    try {
+      // Clear any previous error and mark as transcribing
+      setTranscriptionErrors(prev => {
+        const updated = { ...prev };
+        delete updated[mediaId];
+        return updated;
+      });
+      setTranscribing(prev => ({ ...prev, [mediaId]: true }));
+      
+      // Handle blob URLs by fetching and converting to base64
+      let mediaContent: string | undefined;
+      if (mediaUrl.startsWith('blob:')) {
+        try {
+          mediaContent = await fetchAndConvertToBase64(mediaUrl);
+        } catch (error) {
+          throw new Error('Failed to process blob URL. Please try again.');
+        }
+      }
+      
+      const response = await fetch('/api/transcription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mediaType,
+          mediaId,
+          mediaUrl,
+          ...(mediaContent && { mediaContent }),
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json() as { error?: string };
+        throw new Error(errorData.error ?? 'Failed to transcribe media');
+      }
+      
+      const data = await response.json() as { transcription: string };
+      
+      // Update the candidate state with the new transcription
+      setCandidate(prev => {
+        if (!prev) return prev;
+        
+        const updatedMediaResponses = { ...prev.mediaResponses };
+        
+        if (mediaType === 'video') {
+          updatedMediaResponses.video = updatedMediaResponses.video.map(item => 
+            item.id === mediaId ? { ...item, transcription: data.transcription } : item
+          );
+        } else {
+          updatedMediaResponses.audio = updatedMediaResponses.audio.map(item => 
+            item.id === mediaId ? { ...item, transcription: data.transcription } : item
+          );
+        }
+        
+        return {
+          ...prev,
+          mediaResponses: updatedMediaResponses,
+        };
+      });
+    } catch (err) {
+      console.error('Transcription error:', err);
+      setTranscriptionErrors(prev => ({
+        ...prev,
+        [mediaId]: err instanceof Error ? err.message : 'An unknown error occurred',
+      }));
+    } finally {
+      setTranscribing(prev => {
+        const updated = { ...prev };
+        delete updated[mediaId];
+        return updated;
+      });
+    }
+  };
+  
+  // Helper function to determine if a transcription is valid or contains error message
+  const isValidTranscription = (transcription: string | null): boolean => {
+    if (!transcription) return false;
+    return !transcription.includes("cannot be fully processed server-side");
+  };
   
   if (loading) {
     return (
@@ -420,10 +547,43 @@ export default function CandidateDetailPage() {
                               controls
                             />
                           </div>
-                          {response.transcription && (
+                          {isValidTranscription(response.transcription) ? (
                             <div className="mt-2">
                               <h5 className="text-sm font-medium text-muted-foreground mb-1">Transcription:</h5>
                               <p className="text-sm whitespace-pre-line">{response.transcription}</p>
+                            </div>
+                          ) : transcribing[response.id] ? (
+                            <div className="mt-2 space-y-2">
+                              <h5 className="text-sm font-medium text-muted-foreground mb-1">Transcription:</h5>
+                              <div className="space-y-1">
+                                <Skeleton className="w-full h-4" />
+                                <Skeleton className="w-3/4 h-4" />
+                                <Skeleton className="w-5/6 h-4" />
+                              </div>
+                              <p className="text-xs text-muted-foreground">Generating transcription...</p>
+                            </div>
+                          ) : transcriptionErrors[response.id] ? (
+                            <div className="mt-2">
+                              <div className="text-sm text-red-500 mb-2">
+                                Error: {transcriptionErrors[response.id]}
+                              </div>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => requestTranscription('video', response.id, response.videoUrl)}
+                              >
+                                Retry Transcription
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="mt-2 space-y-2">
+                              <h5 className="text-sm font-medium text-muted-foreground mb-1">Transcription:</h5>
+                              <div className="space-y-1">
+                                <Skeleton className="w-full h-4" />
+                                <Skeleton className="w-3/4 h-4" />
+                                <Skeleton className="w-5/6 h-4" />
+                              </div>
+                              <p className="text-xs text-muted-foreground">Starting transcription...</p>
                             </div>
                           )}
                         </div>
@@ -445,10 +605,43 @@ export default function CandidateDetailPage() {
                             src={response.audioUrl} 
                             controls
                           />
-                          {response.transcription && (
+                          {isValidTranscription(response.transcription) ? (
                             <div className="mt-2">
                               <h5 className="text-sm font-medium text-muted-foreground mb-1">Transcription:</h5>
                               <p className="text-sm whitespace-pre-line">{response.transcription}</p>
+                            </div>
+                          ) : transcribing[response.id] ? (
+                            <div className="mt-2 space-y-2">
+                              <h5 className="text-sm font-medium text-muted-foreground mb-1">Transcription:</h5>
+                              <div className="space-y-1">
+                                <Skeleton className="w-full h-4" />
+                                <Skeleton className="w-3/4 h-4" />
+                                <Skeleton className="w-5/6 h-4" />
+                              </div>
+                              <p className="text-xs text-muted-foreground">Generating transcription...</p>
+                            </div>
+                          ) : transcriptionErrors[response.id] ? (
+                            <div className="mt-2">
+                              <div className="text-sm text-red-500 mb-2">
+                                Error: {transcriptionErrors[response.id]}
+                              </div>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => requestTranscription('audio', response.id, response.audioUrl)}
+                              >
+                                Retry Transcription
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="mt-2 space-y-2">
+                              <h5 className="text-sm font-medium text-muted-foreground mb-1">Transcription:</h5>
+                              <div className="space-y-1">
+                                <Skeleton className="w-full h-4" />
+                                <Skeleton className="w-3/4 h-4" />
+                                <Skeleton className="w-5/6 h-4" />
+                              </div>
+                              <p className="text-xs text-muted-foreground">Starting transcription...</p>
                             </div>
                           )}
                         </div>
@@ -495,4 +688,33 @@ export default function CandidateDetailPage() {
       </div>
     </div>
   );
-} 
+}
+
+const fetchAndConvertToBase64 = async (blobUrl: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    try {
+      // Fetch the blob URL
+      fetch(blobUrl)
+        .then(response => response.blob())
+        .then(blob => {
+          // Use FileReader to convert Blob to base64
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64data = reader.result as string;
+            // Remove the data URL prefix (e.g., "data:audio/mp3;base64,")
+            const base64Content = base64data.split(',')[1] ?? '';
+            resolve(base64Content);
+          };
+          reader.onerror = () => {
+            reject(new Error('Failed to read blob data'));
+          };
+          reader.readAsDataURL(blob);
+        })
+        .catch(error => {
+          reject(error instanceof Error ? error : new Error(String(error)));
+        });
+    } catch (error) {
+      reject(error instanceof Error ? error : new Error(String(error)));
+    }
+  });
+}; 

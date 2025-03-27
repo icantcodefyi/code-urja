@@ -177,17 +177,27 @@ export default function AssessmentPage() {
     setSubmitting(true);
     setSubmitError(null);
     
+    // Show optimistic UI update immediately
+    setStep(AssessmentStep.COMPLETED);
+    
     try {
-      // For each response, use serverUrl if available
-      const processedResponses = Object.values(responses).map((response: Response) => {
-        // For video and audio responses, prefer the serverUrl when available
+      // For each response, ensure serverUrl is properly handled
+      const processedResponses = Object.values(responses).map((response) => {
+        // For video/audio responses, use serverUrl instead of content if available
         if ((response.type === 'VIDEO' || response.type === 'AUDIO') && response.serverUrl) {
           return {
             ...response,
-            content: response.serverUrl // Use the uploadthing URL for server storage
+            content: response.serverUrl // Use the serverUrl as the content for media responses
           };
         }
         return response;
+      });
+
+      console.log("processedResponses", processedResponses);
+
+      // Display toast notification about processing
+      toast.success("Assessment submitted", {
+        description: "Your responses are being processed and transcribed. This might take a moment.",
       });
 
       const response = await fetch('/api/assessments/submit', {
@@ -209,22 +219,17 @@ export default function AssessmentPage() {
       if (!response.ok) {
         throw new Error(data.error ?? 'Failed to submit assessment');
       }
-
-      // Display toast notification about transcription
-      toast.success("Assessment submitted", {
-        description: "Your responses are being processed and transcribed. This might take a moment.",
-      });
       
       // Store analysis result if available
       if (data.analysis) {
         setAnalysis(data.analysis);
       }
       
-      // Move to completed step
-      setStep(AssessmentStep.COMPLETED);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit assessment');
       console.error('Error submitting assessment:', error);
+      
+      // Don't revert the UI to the assessment step, but show error message in the completed step
     } finally {
       setSubmitting(false);
     }
