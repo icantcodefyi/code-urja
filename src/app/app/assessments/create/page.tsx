@@ -10,10 +10,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { 
   Plus, Minus, Video, AudioLines, AlignLeft, Clock, Save, 
-  Sparkles, RotateCcw, Send, FileQuestion, PlusCircle
+  Sparkles, RotateCcw, Send, FileQuestion, PlusCircle, Copy,
+  Mail, CheckCircle, Link as LinkIcon, Share2
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Label } from "~/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 
 // API response types for AI generation
 interface ApiError {
@@ -28,6 +37,7 @@ type ApiResponse = {
   questions: Array<{
     text: string;
     type: QuestionType;
+    expectedAnswer?: string;
   }>;
 } | ApiError;
 
@@ -40,6 +50,7 @@ interface Question {
   text: string;
   type: QuestionType;
   order: number;
+  expectedAnswer?: string;
 }
 
 export default function CreateAssessment() {
@@ -51,7 +62,7 @@ export default function CreateAssessment() {
   const [isTemplate, setIsTemplate] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [questions, setQuestions] = useState<Question[]>([
-    { id: '1', text: '', type: 'VIDEO', order: 1 }
+    { id: '1', text: '', type: 'VIDEO', order: 1, expectedAnswer: '' }
   ]);
   const [activeTab, setActiveTab] = useState("custom");
   
@@ -65,6 +76,11 @@ export default function CreateAssessment() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [assessmentLink, setAssessmentLink] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [sentEmails, setSentEmails] = useState<string[]>([]);
+  const [inviteError, setInviteError] = useState<string | null>(null);
   
   // Add a new question
   const addQuestion = () => {
@@ -72,7 +88,8 @@ export default function CreateAssessment() {
       id: String(questions.length + 1),
       text: '',
       type: 'VIDEO',
-      order: questions.length + 1
+      order: questions.length + 1,
+      expectedAnswer: ''
     };
     setQuestions([...questions, newQuestion]);
   };
@@ -104,6 +121,14 @@ export default function CreateAssessment() {
     setQuestions(updatedQuestions);
   };
   
+  // Update expected answer
+  const updateExpectedAnswer = (id: string, expectedAnswer: string) => {
+    const updatedQuestions = questions.map(q => 
+      q.id === id ? { ...q, expectedAnswer } : q
+    );
+    setQuestions(updatedQuestions);
+  };
+  
   // Handle AI assessment generation
   const handleAIGenerate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -119,6 +144,7 @@ export default function CreateAssessment() {
       assessmentType: formData.get('assessmentType') as 'TECHNICAL' | 'BEHAVIORAL' | 'MIXED',
       numberOfQuestions: Number(formData.get('numberOfQuestions')),
       preferredDuration: Number(formData.get('preferredDuration')),
+      includeExpectedAnswers: true,
     };
 
     try {
@@ -152,7 +178,8 @@ export default function CreateAssessment() {
             id: String(index + 1),
             text: q.text,
             type: q.type,
-            order: index + 1
+            order: index + 1,
+            expectedAnswer: q.expectedAnswer ?? ''
           }));
           setQuestions(formattedQuestions);
         }
@@ -201,11 +228,37 @@ export default function CreateAssessment() {
       const data = await response.json() as { assessment: unknown; assessmentLink: string };
       setSubmitSuccess(true);
       setAssessmentLink(data.assessmentLink);
+      setShowSuccessDialog(true);
     } catch (error) {
       console.error('Error creating assessment:', error);
       setSubmitError(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Handle sending invitation
+  const handleSendInvite = async () => {
+    if (!inviteEmail?.includes('@')) {
+      setInviteError('Please enter a valid email address');
+      return;
+    }
+    
+    setInviteError(null);
+    setInviteSent(true);
+    
+    try {
+      // In a real implementation, you would call an API endpoint to send the invitation
+      // This is just a placeholder for the UI demonstration
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Add to sent emails list
+      setSentEmails(prev => [...prev, inviteEmail]);
+      setInviteEmail('');
+    } catch (error) {
+      setInviteError('Failed to send invitation. Please try again.');
+    } finally {
+      setInviteSent(false);
     }
   };
 
@@ -217,7 +270,7 @@ export default function CreateAssessment() {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="custom" className="flex items-center gap-2">
             <PlusCircle className="h-4 w-4" />
             Custom Assessment
@@ -401,6 +454,19 @@ export default function CreateAssessment() {
                         required
                       />
                       
+                      <div className="relative">
+                        <div className="absolute -top-3 left-3 bg-background px-2 text-xs font-medium text-muted-foreground">
+                          Expected Answer
+                        </div>
+                        <Textarea 
+                          placeholder="Enter the expected answer (for grading purposes)..."
+                          value={question.expectedAnswer ?? ''}
+                          onChange={(e) => updateExpectedAnswer(question.id, e.target.value)}
+                          rows={2}
+                          className="border rounded-md p-4"
+                        />
+                      </div>
+                      
                       <div className="flex justify-end">
                         <Button 
                           type="button"
@@ -460,28 +526,6 @@ export default function CreateAssessment() {
                 {submitError}
               </div>
             )}
-            
-            {submitSuccess && (
-              <div className="mt-4 p-4 border border-green-200 bg-green-50 rounded-md">
-                <h3 className="font-medium text-green-800 mb-2">Assessment Created Successfully!</h3>
-                <p className="mb-2">Share this link with candidates:</p>
-                <div className="flex items-center gap-2">
-                  <Input 
-                    value={`${window.location.origin}${assessmentLink}`} 
-                    readOnly 
-                    className="bg-white"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(`${window.location.origin}${assessmentLink}`);
-                    }}
-                  >
-                    Copy Link
-                  </Button>
-                </div>
-              </div>
-            )}
           </form>
         </TabsContent>
         
@@ -507,6 +551,18 @@ export default function CreateAssessment() {
             </CardHeader>
             <CardContent>
               <form id="aiAssessmentForm" onSubmit={handleAIGenerate} className="space-y-4">
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="flex items-start gap-2">
+                    <Sparkles className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-medium text-blue-700">AI-powered generation</h4>
+                      <p className="text-xs text-blue-600">
+                        Our AI will generate relevant questions with expected answers for better candidate evaluation.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="jobTitle">Job Title</Label>
                   <Input
@@ -613,6 +669,138 @@ export default function CreateAssessment() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-700">
+              <CheckCircle className="h-5 w-5" />
+              Assessment Created Successfully!
+            </DialogTitle>
+            <DialogDescription>
+              Your assessment is ready to be shared with candidates.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="assessment-link" className="text-sm font-medium">
+                Assessment Link
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="assessment-link"
+                  value={`${window.location.origin}${assessmentLink}`}
+                  readOnly
+                  className="flex-1 font-mono text-sm"
+                />
+                <Button
+                  size="sm"
+                  className="shrink-0 cursor-pointer hover:bg-gray-700"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(`${window.location.origin}${assessmentLink}`);
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="candidate-email" className="text-sm font-medium">
+                Send Invitation
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="candidate-email"
+                  type="email"
+                  placeholder="candidate@example.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  size="sm"
+                  className="shrink-0"
+                  onClick={handleSendInvite}
+                  disabled={inviteSent || !inviteEmail}
+                >
+                  {inviteSent ? (
+                    <>Loading...</>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 mr-1" />
+                      Send
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {inviteError && (
+                <p className="text-sm text-red-500 mt-1">{inviteError}</p>
+              )}
+              
+              {sentEmails.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-muted-foreground mb-1">Invitations sent:</p>
+                  <div className="max-h-20 overflow-y-auto">
+                    {sentEmails.map((email, index) => (
+                      <div key={index} className="flex items-center text-sm text-green-600 gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        <span>{email}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter className="flex flex-col sm:flex-row sm:justify-between sm:space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="mb-2 sm:mb-0"
+              onClick={() => setShowSuccessDialog(false)}
+            >
+              Close
+            </Button>
+            
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  window.location.href = `/app/assessments/${assessmentLink.split('/').pop()}`;
+                }}
+              >
+                <LinkIcon className="h-4 w-4 mr-1" />
+                View Assessment
+              </Button>
+              
+              <Button
+                type="button"
+                onClick={() => {
+                  if (navigator.share) {
+                    void navigator.share({
+                      title: title,
+                      text: `Join my assessment: ${title}`,
+                      url: `${window.location.origin}${assessmentLink}`
+                    });
+                  } else {
+                    void navigator.clipboard.writeText(`${window.location.origin}${assessmentLink}`);
+                    // In a real app, you might show a toast notification here
+                  }
+                }}
+              >
+                <Share2 className="h-4 w-4 mr-1" />
+                Share
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

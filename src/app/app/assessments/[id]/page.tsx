@@ -339,10 +339,6 @@ export default function AssessmentDetailPage() {
             <FileText className="mr-2 h-4 w-4" />
             Questions ({questions.length})
           </TabsTrigger>
-          <TabsTrigger value="submissions">
-            <Users className="mr-2 h-4 w-4" />
-            Submissions ({submissions.length})
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="questions" className="mt-4">
